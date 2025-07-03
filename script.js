@@ -243,6 +243,98 @@ const sectionTemplates = {
                 <!-- Feedback will be loaded here -->
             </div>
         </div>
+    `,
+    
+    timeline: `
+        <div class="section-header">
+            <h1 data-i18n="timeline">Timeline</h1>
+        </div>
+        
+        <div class="timeline-container">
+            <div class="timeline-item">
+                <div class="timeline-date">2024</div>
+                <div class="timeline-content">
+                    <h3>Current Position</h3>
+                    <p>Senior Researcher at [Institution Name]</p>
+                    <p>Leading research in AI and Machine Learning</p>
+                </div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-date">2020</div>
+                <div class="timeline-content">
+                    <h3>Ph.D. in Computer Science</h3>
+                    <p>[University Name]</p>
+                    <p>Dissertation: "Advanced Neural Network Architectures"</p>
+                </div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-date">2016</div>
+                <div class="timeline-content">
+                    <h3>M.S. in Computer Science</h3>
+                    <p>[University Name]</p>
+                    <p>Specialization in Machine Learning</p>
+                </div>
+            </div>
+        </div>
+    `,
+    
+    collaboration: `
+        <div class="section-header">
+            <h1 data-i18n="collaboration">Collaboration</h1>
+        </div>
+        
+        <div class="collaboration-content">
+            <div class="collaboration-intro">
+                <p>I'm always interested in collaborating with fellow researchers, industry partners, and students. Here are some areas where I'm looking for collaboration:</p>
+            </div>
+            
+            <div class="collaboration-areas">
+                <div class="collaboration-card">
+                    <i class="fas fa-brain"></i>
+                    <h3>Research Collaboration</h3>
+                    <p>Joint research projects in AI, ML, and NLP</p>
+                </div>
+                <div class="collaboration-card">
+                    <i class="fas fa-industry"></i>
+                    <h3>Industry Partnership</h3>
+                    <p>Applied research and technology transfer</p>
+                </div>
+                <div class="collaboration-card">
+                    <i class="fas fa-graduation-cap"></i>
+                    <h3>Student Mentoring</h3>
+                    <p>PhD and Master's student supervision</p>
+                </div>
+            </div>
+            
+            <div class="collaboration-form">
+                <h3>Collaboration Proposal</h3>
+                <form id="collaboration-form" onsubmit="handleCollaborationForm(event)">
+                    <div class="form-group">
+                        <label for="collab-name">Name</label>
+                        <input type="text" id="collab-name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="collab-email">Email</label>
+                        <input type="email" id="collab-email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="collab-type">Collaboration Type</label>
+                        <select id="collab-type" required>
+                            <option value="">Select Type</option>
+                            <option value="research">Research Collaboration</option>
+                            <option value="industry">Industry Partnership</option>
+                            <option value="mentoring">Student Mentoring</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="collab-proposal">Proposal Description</label>
+                        <textarea id="collab-proposal" rows="5" required></textarea>
+                    </div>
+                    <button type="submit" class="submit-btn">Send Proposal</button>
+                </form>
+            </div>
+        </div>
     `
 };
 
@@ -266,6 +358,8 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function initializeApp() {
+    console.log('Initializing app...');
+    
     // Load saved preferences
     loadPreferences();
     
@@ -274,6 +368,14 @@ function initializeApp() {
     
     // Initialize language
     updateLanguage();
+    
+    // Set up all event listeners
+    setupNavigationEventListeners();
+    setupHeaderEventListeners();
+    setupMobileEventListeners();
+    
+    // Initialize AI assistant resize functionality
+    initializeAIResize();
     
     // Show initial section
     showSection(AppState.currentSection);
@@ -296,6 +398,8 @@ function initializeApp() {
             }, 300);
         }
     }, 1000);
+    
+    console.log('App initialization complete');
 }
 
 function loadPreferences() {
@@ -416,6 +520,51 @@ function toggleMobileMenu() {
 function toggleAIPanel() {
     const aiAssistant = document.querySelector('.ai-assistant');
     aiAssistant.classList.toggle('mobile-open');
+}
+
+// AI Assistant resize functionality
+function initializeAIResize() {
+    const aiAssistant = document.querySelector('.ai-assistant');
+    const resizeHandle = document.createElement('div');
+    resizeHandle.className = 'ai-resize-handle';
+    aiAssistant.appendChild(resizeHandle);
+    
+    let isResizing = false;
+    let startX, startWidth;
+    
+    resizeHandle.addEventListener('mousedown', (e) => {
+        isResizing = true;
+        startX = e.clientX;
+        startWidth = parseInt(document.defaultView.getComputedStyle(aiAssistant).width, 10);
+        document.addEventListener('mousemove', handleResize);
+        document.addEventListener('mouseup', stopResize);
+        e.preventDefault();
+    });
+    
+    function handleResize(e) {
+        if (!isResizing) return;
+        
+        const width = startWidth - (e.clientX - startX);
+        const minWidth = 300;
+        const maxWidth = 600;
+        
+        if (width >= minWidth && width <= maxWidth) {
+            aiAssistant.style.width = width + 'px';
+            document.documentElement.style.setProperty('--ai-panel-width', width + 'px');
+            
+            // Update main content margin
+            const mainContent = document.querySelector('.main-content');
+            if (mainContent) {
+                mainContent.style.marginRight = width + 'px';
+            }
+        }
+    }
+    
+    function stopResize() {
+        isResizing = false;
+        document.removeEventListener('mousemove', handleResize);
+        document.removeEventListener('mouseup', stopResize);
+    }
 }
 
 // Modal management
@@ -895,6 +1044,12 @@ window.addEventListener('load', function() {
 });
 
 console.log('Script.js loaded successfully');
+
+// Initialize app when DOM is ready
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM Content Loaded - Starting app initialization');
+    initializeApp();
+});
 
 // Export functions for use in other modules
 window.AppState = AppState;

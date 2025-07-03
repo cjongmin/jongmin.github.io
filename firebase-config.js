@@ -7,38 +7,48 @@ const firebaseConfig = {
     messagingSenderId: "108930331185",
     appId: "1:108930331185:web:ec6dc184c1ef342416db10",
     measurementId: "G-BGW23T7ZV5"
-  };
+};
 
 // Global variables
 let app, auth, db;
 let isFirebaseEnabled = false;
-let isMockMode = true; // Enable mock mode for demo purposes
+let isMockMode = false;
 
 // Check if we have valid Firebase config
 function hasValidFirebaseConfig() {
-    return firebaseConfig.apiKey !== "your-api-key" && 
-           firebaseConfig.projectId !== "your-project-id";
+    return firebaseConfig.apiKey && 
+           firebaseConfig.projectId && 
+           firebaseConfig.apiKey !== "your-api-key";
 }
 
-// Initialize Firebase or Mock Mode
+// Initialize Firebase
 function initializeFirebase() {
     try {
         if (hasValidFirebaseConfig() && typeof firebase !== 'undefined') {
-            // Real Firebase initialization
+            console.log('Initializing Firebase with real config...');
+            
+            // Initialize Firebase app
             app = firebase.initializeApp(firebaseConfig);
             auth = firebase.auth();
             db = firebase.firestore();
+            
             isFirebaseEnabled = true;
             isMockMode = false;
+            
             console.log('Firebase initialized successfully');
+            
+            // Set up authentication state observer
             setupAuthStateObserver();
+            
+            // Configure Firestore settings
             configureFirestore();
+            
+            return true;
         } else {
-            // Mock mode - for demo without Firebase
-            console.log('Running in mock mode - Firebase not configured');
+            console.log('Firebase not available, switching to mock mode');
             initializeMockMode();
+            return false;
         }
-        return true;
     } catch (error) {
         console.warn('Firebase initialization failed, switching to mock mode:', error);
         initializeMockMode();
@@ -66,13 +76,187 @@ function initializeMockMode() {
     };
     
     console.log('Mock mode initialized - all features available for demo');
-    
-    // Simulate user signed out state
     handleUserSignedOut();
 }
 
-// Mock login function
-function mockLogin(provider = 'google') {
+// Setup authentication state observer
+function setupAuthStateObserver() {
+    if (!isFirebaseEnabled || !auth) return;
+    
+    auth.onAuthStateChanged(async (user) => {
+        if (user) {
+            console.log('User signed in:', user.email);
+            await handleUserSignedIn(user);
+        } else {
+            console.log('User signed out');
+            handleUserSignedOut();
+        }
+    });
+}
+
+// Configure Firestore settings
+function configureFirestore() {
+    if (!isFirebaseEnabled || !db) return;
+    
+    try {
+        // Enable offline persistence
+        db.enablePersistence().catch((err) => {
+            if (err.code === 'failed-precondition') {
+                console.warn('Multiple tabs open, persistence can only be enabled in one tab at a time.');
+            } else if (err.code === 'unimplemented') {
+                console.warn('The current browser doesn\'t support persistence.');
+            }
+        });
+    } catch (error) {
+        console.warn('Error setting up Firestore:', error);
+    }
+}
+
+// Authentication functions
+async function loginWithGoogle() {
+    console.log('Google login attempt...');
+    
+    if (isMockMode) {
+        return mockLogin('Google');
+    }
+    
+    if (!isFirebaseEnabled || !auth) {
+        showToast('Firebase not configured. Using mock login.', 'warning');
+        return mockLogin('Google');
+    }
+    
+    try {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        provider.addScope('profile');
+        provider.addScope('email');
+        
+        const result = await auth.signInWithPopup(provider);
+        console.log('Google login successful:', result.user.email);
+        showToast('Google 로그인 성공!', 'success');
+        closeModal('login-modal');
+        return result;
+        
+    } catch (error) {
+        console.error('Google login error:', error);
+        showToast('Google 로그인 실패: ' + error.message, 'error');
+        throw error;
+    }
+}
+
+async function loginWithGitHub() {
+    console.log('GitHub login attempt...');
+    
+    if (isMockMode) {
+        return mockLogin('GitHub');
+    }
+    
+    if (!isFirebaseEnabled || !auth) {
+        showToast('Firebase not configured. Using mock login.', 'warning');
+        return mockLogin('GitHub');
+    }
+    
+    try {
+        const provider = new firebase.auth.GithubAuthProvider();
+        provider.addScope('user:email');
+        provider.addScope('read:user');
+        
+        const result = await auth.signInWithPopup(provider);
+        console.log('GitHub login successful:', result.user.email);
+        showToast('GitHub 로그인 성공!', 'success');
+        closeModal('login-modal');
+        return result;
+        
+    } catch (error) {
+        console.error('GitHub login error:', error);
+        showToast('GitHub 로그인 실패: ' + error.message, 'error');
+        throw error;
+    }
+}
+
+async function loginWithEmail(email, password) {
+    console.log('Email login attempt...');
+    
+    if (isMockMode) {
+        return mockLogin('Email');
+    }
+    
+    if (!isFirebaseEnabled || !auth) {
+        showToast('Firebase not configured. Using mock login.', 'warning');
+        return mockLogin('Email');
+    }
+    
+    try {
+        const result = await auth.signInWithEmailAndPassword(email, password);
+        console.log('Email login successful:', result.user.email);
+        showToast('이메일 로그인 성공!', 'success');
+        closeModal('login-modal');
+        return result;
+        
+    } catch (error) {
+        console.error('Email login error:', error);
+        showToast('이메일 로그인 실패: ' + error.message, 'error');
+        throw error;
+    }
+}
+
+async function signUpWithEmail(email, password, displayName) {
+    console.log('Email signup attempt...');
+    
+    if (isMockMode) {
+        return mockLogin('Email');
+    }
+    
+    if (!isFirebaseEnabled || !auth) {
+        showToast('Firebase not configured. Using mock login.', 'warning');
+        return mockLogin('Email');
+    }
+    
+    try {
+        const result = await auth.createUserWithEmailAndPassword(email, password);
+        
+        // Update user profile
+        if (displayName) {
+            await result.user.updateProfile({
+                displayName: displayName
+            });
+        }
+        
+        console.log('Email signup successful:', result.user.email);
+        showToast('회원가입 성공!', 'success');
+        closeModal('login-modal');
+        return result;
+        
+    } catch (error) {
+        console.error('Email signup error:', error);
+        showToast('회원가입 실패: ' + error.message, 'error');
+        throw error;
+    }
+}
+
+async function logout() {
+    console.log('Logout attempt...');
+    
+    if (isMockMode) {
+        return mockLogout();
+    }
+    
+    if (!isFirebaseEnabled || !auth) {
+        return mockLogout();
+    }
+    
+    try {
+        await auth.signOut();
+        console.log('Logout successful');
+        showToast('로그아웃되었습니다.', 'success');
+        
+    } catch (error) {
+        console.error('Logout error:', error);
+        showToast('로그아웃 중 오류가 발생했습니다.', 'error');
+    }
+}
+
+// Mock authentication functions
+function mockLogin(provider = 'Google') {
     const mockUser = {
         uid: 'mock-user-123',
         email: 'demo@example.com',
@@ -84,67 +268,31 @@ function mockLogin(provider = 'google') {
     window.mockAuth.isSignedIn = true;
     
     handleUserSignedIn(mockUser);
-    showToast(`Mock ${provider} login successful! (Demo mode)`);
+    showToast(`Mock ${provider} 로그인 성공! (데모 모드)`, 'success');
+    closeModal('login-modal');
     
     return Promise.resolve({ user: mockUser });
 }
 
-// Mock logout function
 function mockLogout() {
     window.mockAuth.currentUser = null;
     window.mockAuth.isSignedIn = false;
     
     handleUserSignedOut();
-    showToast('Mock logout successful! (Demo mode)');
+    showToast('Mock 로그아웃 성공! (데모 모드)', 'success');
     
     return Promise.resolve();
 }
 
-function setupAuthStateObserver() {
-    if (!isFirebaseEnabled) return;
-    
-    auth.onAuthStateChanged((user) => {
-        if (user) {
-            handleUserSignedIn(user);
-        } else {
-            handleUserSignedOut();
-        }
-    });
-}
-
-function configureFirestore() {
-    if (!isFirebaseEnabled) return;
-    
-    // Configure Firestore settings for better performance
-    db.settings({
-        cacheSizeBytes: firebase.firestore.CACHE_SIZE_UNLIMITED
-    });
-    
-    // Enable offline persistence
-    db.enablePersistence()
-        .catch((err) => {
-            if (err.code === 'failed-precondition') {
-                console.warn('Multiple tabs open, persistence can only be enabled in one tab at a time.');
-            } else if (err.code === 'unimplemented') {
-                console.warn('The current browser doesn\'t support persistence.');
-            }
-        });
-}
-
-function handleUserSignedIn(user) {
-    console.log('User signed in:', user.email || user.displayName);
+// User state handlers
+async function handleUserSignedIn(user) {
+    console.log('Handling user signed in:', user.email || user.displayName);
     
     // Update UI
     updateUIForSignedInUser(user);
     
-    // Check if user is admin (mock admin for demo)
-    const isAdmin = isMockMode ? (user.email === 'admin@example.com') : false;
-    checkAdminStatus(user.uid, isAdmin);
-    
-    // Load user-specific data
-    if (!isMockMode) {
-        loadUserData(user.uid);
-    }
+    // Check admin status
+    const isAdmin = await checkAdminStatus(user.uid);
     
     // Update app state
     if (typeof AppState !== 'undefined') {
@@ -154,11 +302,17 @@ function handleUserSignedIn(user) {
             displayName: user.displayName,
             photoURL: user.photoURL
         };
+        AppState.isAdmin = isAdmin;
+    }
+    
+    // Load user data (only if Firebase is enabled)
+    if (isFirebaseEnabled) {
+        await loadUserData(user.uid);
     }
 }
 
 function handleUserSignedOut() {
-    console.log('User signed out');
+    console.log('Handling user signed out');
     
     // Update UI
     updateUIForSignedOutUser();
@@ -180,82 +334,101 @@ function updateUIForSignedInUser(user) {
         loginBtn.style.display = 'none';
     }
     
-    // Show logout button
-    const logoutBtn = document.getElementById('logout-btn');
-    if (logoutBtn) {
-        logoutBtn.style.display = 'inline-flex';
-    }
-    
-    // Update user info
-    const userName = document.getElementById('user-name');
-    if (userName) {
-        userName.textContent = user.displayName || user.email;
-        userName.style.display = 'inline';
-    }
-    
-    // Update user avatar
-    const userAvatar = document.getElementById('user-avatar');
-    if (userAvatar) {
-        userAvatar.src = user.photoURL || 'https://via.placeholder.com/40?text=' + (user.displayName ? user.displayName[0] : 'U');
-        userAvatar.alt = user.displayName || user.email;
+    // Show logout button and user info
+    const authSection = document.querySelector('.auth-section');
+    if (authSection) {
+        authSection.innerHTML = `
+            <div class="user-info">
+                <img src="${user.photoURL || 'https://via.placeholder.com/32?text=' + (user.displayName ? user.displayName[0] : 'U')}" 
+                     alt="User Avatar" class="user-avatar" id="user-avatar">
+                <span class="user-name" id="user-name">${user.displayName || user.email}</span>
+                <button onclick="logout()" class="logout-btn" id="logout-btn">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>로그아웃</span>
+                </button>
+            </div>
+        `;
     }
 }
 
 function updateUIForSignedOutUser() {
     // Show login button
-    const loginBtn = document.getElementById('login-btn');
-    if (loginBtn) {
-        loginBtn.style.display = 'inline-flex';
-    }
-    
-    // Hide logout button
-    const logoutBtn = document.getElementById('logout-btn');
-    if (logoutBtn) {
-        logoutBtn.style.display = 'none';
-    }
-    
-    // Hide user info
-    const userName = document.getElementById('user-name');
-    if (userName) {
-        userName.style.display = 'none';
+    const authSection = document.querySelector('.auth-section');
+    if (authSection) {
+        authSection.innerHTML = `
+            <button id="login-btn" onclick="showLoginModal()" class="login-btn">
+                <i class="fas fa-sign-in-alt"></i>
+                <span data-i18n="login">로그인</span>
+            </button>
+        `;
     }
 }
 
-async function checkAdminStatus(userId, mockAdmin = false) {
+async function checkAdminStatus(userId) {
     try {
-        let isAdmin = false;
-        
         if (isMockMode) {
             // In mock mode, make demo user an admin for testing
-            isAdmin = mockAdmin;
-        } else if (isFirebaseEnabled) {
-            const userDoc = await db.collection('users').doc(userId).get();
-            if (userDoc.exists) {
-                const userData = userDoc.data();
-                isAdmin = userData.role === 'admin';
-            } else {
-                await createUserDocument(userId);
-            }
+            return false; // Set to true if you want mock user to be admin
         }
         
-        if (typeof AppState !== 'undefined') {
-            AppState.isAdmin = isAdmin;
+        if (!isFirebaseEnabled || !db) {
+            return false;
         }
+        
+        const userDoc = await db.collection('admins').doc(userId).get();
+        const isAdmin = userDoc.exists;
         
         if (isAdmin) {
             document.body.classList.add('admin-mode');
             console.log('Admin access granted');
         }
+        
+        return isAdmin;
+        
     } catch (error) {
         console.error('Error checking admin status:', error);
+        return false;
+    }
+}
+
+async function loadUserData(userId) {
+    if (!isFirebaseEnabled || !db) return;
+    
+    try {
+        const userDoc = await db.collection('users').doc(userId).get();
+        
+        if (userDoc.exists) {
+            const userData = userDoc.data();
+            
+            // Apply user preferences
+            if (userData.theme && typeof AppState !== 'undefined') {
+                AppState.currentTheme = userData.theme;
+                if (typeof applyTheme === 'function') {
+                    applyTheme(userData.theme);
+                }
+            }
+            
+            if (userData.language && typeof AppState !== 'undefined') {
+                AppState.currentLanguage = userData.language;
+                if (typeof updateLanguage === 'function') {
+                    updateLanguage();
+                }
+            }
+        } else {
+            // Create user document if it doesn't exist
+            await createUserDocument(userId);
+        }
+        
+    } catch (error) {
+        console.error('Error loading user data:', error);
     }
 }
 
 async function createUserDocument(userId) {
+    if (!isFirebaseEnabled || !db || !auth.currentUser) return;
+    
     try {
         const user = auth.currentUser;
-        if (!user) return;
-        
         await db.collection('users').doc(userId).set({
             email: user.email,
             displayName: user.displayName,
@@ -271,257 +444,14 @@ async function createUserDocument(userId) {
     }
 }
 
-async function loadUserData(userId) {
-    try {
-        // Load user preferences
-        const userDoc = await db.collection('users').doc(userId).get();
-        
-        if (userDoc.exists) {
-            const userData = userDoc.data();
-            
-            // Apply user preferences
-            if (userData.theme) {
-                AppState.currentTheme = userData.theme;
-                applyTheme(userData.theme);
-            }
-            
-            if (userData.language) {
-                AppState.currentLanguage = userData.language;
-                updateLanguage();
-            }
-            
-            // Update last login
-            await db.collection('users').doc(userId).update({
-                lastLogin: firebase.firestore.FieldValue.serverTimestamp()
-            });
-        }
-    } catch (error) {
-        console.error('Error loading user data:', error);
-    }
-}
-
-// Firestore data operations
-async function savePublication(publicationData) {
-    try {
-        const docRef = await db.collection('publications').add({
-            ...publicationData,
-            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-        
-        console.log('Publication saved with ID:', docRef.id);
-        return docRef.id;
-    } catch (error) {
-        console.error('Error saving publication:', error);
-        throw error;
-    }
-}
-
-async function loadPublicationsFromFirestore() {
-    try {
-        const snapshot = await db.collection('publications')
-            .orderBy('year', 'desc')
-            .get();
-        
-        const publications = [];
-        snapshot.forEach(doc => {
-            publications.push({
-                id: doc.id,
-                ...doc.data()
-            });
-        });
-        
-        AppState.publications = publications;
-        renderPublications();
-        updateStats();
-        
-        return publications;
-    } catch (error) {
-        console.error('Error loading publications:', error);
-        return [];
-    }
-}
-
-async function saveProject(projectData) {
-    try {
-        const docRef = await db.collection('projects').add({
-            ...projectData,
-            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-        
-        console.log('Project saved with ID:', docRef.id);
-        return docRef.id;
-    } catch (error) {
-        console.error('Error saving project:', error);
-        throw error;
-    }
-}
-
-async function loadProjectsFromFirestore() {
-    try {
-        const snapshot = await db.collection('projects')
-            .orderBy('createdAt', 'desc')
-            .get();
-        
-        const projects = [];
-        snapshot.forEach(doc => {
-            projects.push({
-                id: doc.id,
-                ...doc.data()
-            });
-        });
-        
-        AppState.projects = projects;
-        renderProjects();
-        
-        return projects;
-    } catch (error) {
-        console.error('Error loading projects:', error);
-        return [];
-    }
-}
-
-async function saveFeedback(feedbackData) {
-    try {
-        const docRef = await db.collection('feedback').add({
-            ...feedbackData,
-            userId: AppState.user?.uid || null,
-            userEmail: AppState.user?.email || null,
-            createdAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-        
-        console.log('Feedback saved with ID:', docRef.id);
-        return docRef.id;
-    } catch (error) {
-        console.error('Error saving feedback:', error);
-        throw error;
-    }
-}
-
-async function loadFeedbackFromFirestore() {
-    try {
-        const snapshot = await db.collection('feedback')
-            .orderBy('createdAt', 'desc')
-            .limit(50)
-            .get();
-        
-        const feedback = [];
-        snapshot.forEach(doc => {
-            feedback.push({
-                id: doc.id,
-                ...doc.data()
-            });
-        });
-        
-        return feedback;
-    } catch (error) {
-        console.error('Error loading feedback:', error);
-        return [];
-    }
-}
-
-async function saveContactMessage(messageData) {
-    try {
-        const docRef = await db.collection('contact_messages').add({
-            ...messageData,
-            userId: AppState.user?.uid || null,
-            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-            status: 'unread'
-        });
-        
-        console.log('Contact message saved with ID:', docRef.id);
-        return docRef.id;
-    } catch (error) {
-        console.error('Error saving contact message:', error);
-        throw error;
-    }
-}
-
-async function saveAnalyticsEvent(eventData) {
-    try {
-        await db.collection('analytics').add({
-            ...eventData,
-            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-            userId: AppState.user?.uid || null,
-            sessionId: getSessionId()
-        });
-    } catch (error) {
-        console.error('Error saving analytics event:', error);
-    }
-}
-
-function getSessionId() {
-    let sessionId = sessionStorage.getItem('sessionId');
-    if (!sessionId) {
-        sessionId = Date.now().toString(36) + Math.random().toString(36).substr(2);
-        sessionStorage.setItem('sessionId', sessionId);
-    }
-    return sessionId;
-}
-
-// Real-time listeners
-function setupRealtimeListeners() {
-    if (!db) return;
-    
-    // Listen for publications changes
-    db.collection('publications').onSnapshot((snapshot) => {
-        const publications = [];
-        snapshot.forEach(doc => {
-            publications.push({
-                id: doc.id,
-                ...doc.data()
-            });
-        });
-        
-        AppState.publications = publications;
-        if (AppState.currentSection === 'publications') {
-            renderPublications();
-        }
-        updateStats();
-    });
-    
-    // Listen for projects changes
-    db.collection('projects').onSnapshot((snapshot) => {
-        const projects = [];
-        snapshot.forEach(doc => {
-            projects.push({
-                id: doc.id,
-                ...doc.data()
-            });
-        });
-        
-        AppState.projects = projects;
-        if (AppState.currentSection === 'projects') {
-            renderProjects();
-        }
-    });
-}
-
-// Track page views
-function trackPageView(section) {
-    saveAnalyticsEvent({
-        type: 'page_view',
-        section: section,
-        userAgent: navigator.userAgent,
-        timestamp: new Date().toISOString()
-    });
-}
-
-// Track user interactions
-function trackInteraction(action, details = {}) {
-    saveAnalyticsEvent({
-        type: 'interaction',
-        action: action,
-        details: details,
-        timestamp: new Date().toISOString()
-    });
-}
-
 // Toast notification function
 function showToast(message, type = 'info') {
+    // Remove existing toasts
+    const existingToasts = document.querySelectorAll('.toast-notification');
+    existingToasts.forEach(toast => toast.remove());
+    
     const toast = document.createElement('div');
-    toast.className = `toast toast-${type}`;
+    toast.className = `toast-notification toast-${type}`;
     toast.textContent = message;
     
     const style = {
@@ -535,7 +465,9 @@ function showToast(message, type = 'info') {
         fontWeight: '500',
         fontSize: '14px',
         maxWidth: '300px',
-        wordWrap: 'break-word'
+        wordWrap: 'break-word',
+        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+        animation: 'slideInRight 0.3s ease'
     };
     
     // Set background color based on type
@@ -555,52 +487,29 @@ function showToast(message, type = 'info') {
     // Auto remove after 3 seconds
     setTimeout(() => {
         if (toast.parentNode) {
-            toast.parentNode.removeChild(toast);
+            toast.style.animation = 'slideOutRight 0.3s ease';
+            setTimeout(() => {
+                if (toast.parentNode) {
+                    toast.parentNode.removeChild(toast);
+                }
+            }, 300);
         }
     }, 3000);
 }
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('Firebase config: Initializing...');
     initializeFirebase();
-    
-    // Set up login button
-    const loginBtn = document.getElementById('login-btn');
-    if (loginBtn) {
-        loginBtn.addEventListener('click', () => {
-            if (isMockMode) {
-                mockLogin('google');
-            } else {
-                // Real Firebase login would go here
-                showToast('Please configure Firebase for real authentication', 'warning');
-            }
-        });
-    }
-    
-    // Set up logout button
-    const logoutBtn = document.getElementById('logout-btn');
-    if (logoutBtn) {
-        logoutBtn.addEventListener('click', () => {
-            if (isMockMode) {
-                mockLogout();
-            } else if (isFirebaseEnabled && auth) {
-                auth.signOut();
-            }
-        });
-    }
 });
 
 // Export functions for global use
 window.initializeFirebase = initializeFirebase;
+window.loginWithGoogle = loginWithGoogle;
+window.loginWithGitHub = loginWithGitHub;
+window.loginWithEmail = loginWithEmail;
+window.signUpWithEmail = signUpWithEmail;
+window.logout = logout;
 window.mockLogin = mockLogin;
 window.mockLogout = mockLogout;
-window.showToast = showToast;
-window.savePublication = savePublication;
-window.loadPublicationsFromFirestore = loadPublicationsFromFirestore;
-window.saveProject = saveProject;
-window.loadProjectsFromFirestore = loadProjectsFromFirestore;
-window.saveFeedback = saveFeedback;
-window.loadFeedbackFromFirestore = loadFeedbackFromFirestore;
-window.saveContactMessage = saveContactMessage;
-window.trackPageView = trackPageView;
-window.trackInteraction = trackInteraction; 
+window.showToast = showToast; 
