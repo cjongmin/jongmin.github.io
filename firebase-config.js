@@ -1,4 +1,4 @@
-// Firebase configuration
+// Firebase configuration - Set to your actual Firebase project config
 const firebaseConfig = {
     // Replace with your Firebase project configuration
     apiKey: "your-api-key",
@@ -9,34 +9,100 @@ const firebaseConfig = {
     appId: "your-app-id"
 };
 
-// Initialize Firebase
+// Global variables
 let app, auth, db;
+let isFirebaseEnabled = false;
+let isMockMode = true; // Enable mock mode for demo purposes
 
+// Check if we have valid Firebase config
+function hasValidFirebaseConfig() {
+    return firebaseConfig.apiKey !== "your-api-key" && 
+           firebaseConfig.projectId !== "your-project-id";
+}
+
+// Initialize Firebase or Mock Mode
 function initializeFirebase() {
     try {
-        // Initialize Firebase app
-        app = firebase.initializeApp(firebaseConfig);
-        
-        // Initialize Firebase services
-        auth = firebase.auth();
-        db = firebase.firestore();
-        
-        console.log('Firebase initialized successfully');
-        
-        // Set up authentication state observer
-        setupAuthStateObserver();
-        
-        // Configure Firestore settings
-        configureFirestore();
-        
+        if (hasValidFirebaseConfig() && typeof firebase !== 'undefined') {
+            // Real Firebase initialization
+            app = firebase.initializeApp(firebaseConfig);
+            auth = firebase.auth();
+            db = firebase.firestore();
+            isFirebaseEnabled = true;
+            isMockMode = false;
+            console.log('Firebase initialized successfully');
+            setupAuthStateObserver();
+            configureFirestore();
+        } else {
+            // Mock mode - for demo without Firebase
+            console.log('Running in mock mode - Firebase not configured');
+            initializeMockMode();
+        }
         return true;
     } catch (error) {
-        console.error('Firebase initialization failed:', error);
+        console.warn('Firebase initialization failed, switching to mock mode:', error);
+        initializeMockMode();
         return false;
     }
 }
 
+// Mock mode initialization
+function initializeMockMode() {
+    isFirebaseEnabled = false;
+    isMockMode = true;
+    
+    // Create mock auth object
+    window.mockAuth = {
+        currentUser: null,
+        isSignedIn: false
+    };
+    
+    // Create mock database
+    window.mockDB = {
+        publications: [],
+        projects: [],
+        feedback: [],
+        contacts: []
+    };
+    
+    console.log('Mock mode initialized - all features available for demo');
+    
+    // Simulate user signed out state
+    handleUserSignedOut();
+}
+
+// Mock login function
+function mockLogin(provider = 'google') {
+    const mockUser = {
+        uid: 'mock-user-123',
+        email: 'demo@example.com',
+        displayName: 'Demo User',
+        photoURL: 'https://via.placeholder.com/40?text=DU'
+    };
+    
+    window.mockAuth.currentUser = mockUser;
+    window.mockAuth.isSignedIn = true;
+    
+    handleUserSignedIn(mockUser);
+    showToast(`Mock ${provider} login successful! (Demo mode)`);
+    
+    return Promise.resolve({ user: mockUser });
+}
+
+// Mock logout function
+function mockLogout() {
+    window.mockAuth.currentUser = null;
+    window.mockAuth.isSignedIn = false;
+    
+    handleUserSignedOut();
+    showToast('Mock logout successful! (Demo mode)');
+    
+    return Promise.resolve();
+}
+
 function setupAuthStateObserver() {
+    if (!isFirebaseEnabled) return;
+    
     auth.onAuthStateChanged((user) => {
         if (user) {
             handleUserSignedIn(user);
@@ -47,6 +113,8 @@ function setupAuthStateObserver() {
 }
 
 function configureFirestore() {
+    if (!isFirebaseEnabled) return;
+    
     // Configure Firestore settings for better performance
     db.settings({
         cacheSizeBytes: firebase.firestore.CACHE_SIZE_UNLIMITED
@@ -64,24 +132,29 @@ function configureFirestore() {
 }
 
 function handleUserSignedIn(user) {
-    console.log('User signed in:', user.email);
+    console.log('User signed in:', user.email || user.displayName);
     
     // Update UI
     updateUIForSignedInUser(user);
     
-    // Check if user is admin
-    checkAdminStatus(user.uid);
+    // Check if user is admin (mock admin for demo)
+    const isAdmin = isMockMode ? (user.email === 'admin@example.com') : false;
+    checkAdminStatus(user.uid, isAdmin);
     
     // Load user-specific data
-    loadUserData(user.uid);
+    if (!isMockMode) {
+        loadUserData(user.uid);
+    }
     
     // Update app state
-    AppState.user = {
-        uid: user.uid,
-        email: user.email,
-        displayName: user.displayName,
-        photoURL: user.photoURL
-    };
+    if (typeof AppState !== 'undefined') {
+        AppState.user = {
+            uid: user.uid,
+            email: user.email,
+            displayName: user.displayName,
+            photoURL: user.photoURL
+        };
+    }
 }
 
 function handleUserSignedOut() {
@@ -91,8 +164,10 @@ function handleUserSignedOut() {
     updateUIForSignedOutUser();
     
     // Clear app state
-    AppState.user = null;
-    AppState.isAdmin = false;
+    if (typeof AppState !== 'undefined') {
+        AppState.user = null;
+        AppState.isAdmin = false;
+    }
     
     // Remove admin mode
     document.body.classList.remove('admin-mode');
@@ -102,20 +177,27 @@ function updateUIForSignedInUser(user) {
     // Hide login button
     const loginBtn = document.getElementById('login-btn');
     if (loginBtn) {
-        loginBtn.classList.add('hidden');
+        loginBtn.style.display = 'none';
     }
     
-    // Show user menu
-    const userMenu = document.getElementById('user-menu');
-    if (userMenu) {
-        userMenu.classList.remove('hidden');
-        
-        // Update user avatar
-        const userAvatar = document.getElementById('user-avatar');
-        if (userAvatar) {
-            userAvatar.src = user.photoURL || 'https://via.placeholder.com/40';
-            userAvatar.alt = user.displayName || user.email;
-        }
+    // Show logout button
+    const logoutBtn = document.getElementById('logout-btn');
+    if (logoutBtn) {
+        logoutBtn.style.display = 'inline-flex';
+    }
+    
+    // Update user info
+    const userName = document.getElementById('user-name');
+    if (userName) {
+        userName.textContent = user.displayName || user.email;
+        userName.style.display = 'inline';
+    }
+    
+    // Update user avatar
+    const userAvatar = document.getElementById('user-avatar');
+    if (userAvatar) {
+        userAvatar.src = user.photoURL || 'https://via.placeholder.com/40?text=' + (user.displayName ? user.displayName[0] : 'U');
+        userAvatar.alt = user.displayName || user.email;
     }
 }
 
@@ -123,33 +205,46 @@ function updateUIForSignedOutUser() {
     // Show login button
     const loginBtn = document.getElementById('login-btn');
     if (loginBtn) {
-        loginBtn.classList.remove('hidden');
+        loginBtn.style.display = 'inline-flex';
     }
     
-    // Hide user menu
-    const userMenu = document.getElementById('user-menu');
-    if (userMenu) {
-        userMenu.classList.add('hidden');
+    // Hide logout button
+    const logoutBtn = document.getElementById('logout-btn');
+    if (logoutBtn) {
+        logoutBtn.style.display = 'none';
+    }
+    
+    // Hide user info
+    const userName = document.getElementById('user-name');
+    if (userName) {
+        userName.style.display = 'none';
     }
 }
 
-async function checkAdminStatus(userId) {
+async function checkAdminStatus(userId, mockAdmin = false) {
     try {
-        const userDoc = await db.collection('users').doc(userId).get();
+        let isAdmin = false;
         
-        if (userDoc.exists) {
-            const userData = userDoc.data();
-            const isAdmin = userData.role === 'admin';
-            
-            AppState.isAdmin = isAdmin;
-            
-            if (isAdmin) {
-                document.body.classList.add('admin-mode');
-                console.log('Admin access granted');
+        if (isMockMode) {
+            // In mock mode, make demo user an admin for testing
+            isAdmin = mockAdmin;
+        } else if (isFirebaseEnabled) {
+            const userDoc = await db.collection('users').doc(userId).get();
+            if (userDoc.exists) {
+                const userData = userDoc.data();
+                isAdmin = userData.role === 'admin';
+            } else {
+                await createUserDocument(userId);
             }
-        } else {
-            // Create user document if it doesn't exist
-            await createUserDocument(userId);
+        }
+        
+        if (typeof AppState !== 'undefined') {
+            AppState.isAdmin = isAdmin;
+        }
+        
+        if (isAdmin) {
+            document.body.classList.add('admin-mode');
+            console.log('Admin access granted');
         }
     } catch (error) {
         console.error('Error checking admin status:', error);
@@ -423,8 +518,83 @@ function trackInteraction(action, details = {}) {
     });
 }
 
-// Export functions
+// Toast notification function
+function showToast(message, type = 'info') {
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.textContent = message;
+    
+    const style = {
+        position: 'fixed',
+        top: '20px',
+        right: '20px',
+        padding: '12px 20px',
+        borderRadius: '8px',
+        color: 'white',
+        zIndex: '10000',
+        fontWeight: '500',
+        fontSize: '14px',
+        maxWidth: '300px',
+        wordWrap: 'break-word'
+    };
+    
+    // Set background color based on type
+    const colors = {
+        info: '#2563eb',
+        success: '#059669',
+        warning: '#d97706',
+        error: '#dc2626'
+    };
+    
+    Object.assign(toast.style, style, {
+        backgroundColor: colors[type] || colors.info
+    });
+    
+    document.body.appendChild(toast);
+    
+    // Auto remove after 3 seconds
+    setTimeout(() => {
+        if (toast.parentNode) {
+            toast.parentNode.removeChild(toast);
+        }
+    }, 3000);
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', () => {
+    initializeFirebase();
+    
+    // Set up login button
+    const loginBtn = document.getElementById('login-btn');
+    if (loginBtn) {
+        loginBtn.addEventListener('click', () => {
+            if (isMockMode) {
+                mockLogin('google');
+            } else {
+                // Real Firebase login would go here
+                showToast('Please configure Firebase for real authentication', 'warning');
+            }
+        });
+    }
+    
+    // Set up logout button
+    const logoutBtn = document.getElementById('logout-btn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', () => {
+            if (isMockMode) {
+                mockLogout();
+            } else if (isFirebaseEnabled && auth) {
+                auth.signOut();
+            }
+        });
+    }
+});
+
+// Export functions for global use
 window.initializeFirebase = initializeFirebase;
+window.mockLogin = mockLogin;
+window.mockLogout = mockLogout;
+window.showToast = showToast;
 window.savePublication = savePublication;
 window.loadPublicationsFromFirestore = loadPublicationsFromFirestore;
 window.saveProject = saveProject;

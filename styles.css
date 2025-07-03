@@ -1,46 +1,109 @@
 /* CSS Custom Properties for theming */
 :root {
-    /* Light theme colors */
-    --primary-color: #667eea;
-    --primary-dark: #5a6fd8;
-    --secondary-color: #764ba2;
-    --accent-color: #f093fb;
-    --background-color: #fafbfc;
-    --surface-color: #ffffff;
-    --text-primary: #2d3748;
-    --text-secondary: #718096;
-    --text-muted: #a0aec0;
-    --border-color: #e2e8f0;
-    --shadow-light: 0 1px 3px rgba(0, 0, 0, 0.1);
-    --shadow-medium: 0 4px 6px rgba(0, 0, 0, 0.07);
-    --shadow-heavy: 0 10px 25px rgba(0, 0, 0, 0.1);
-    --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    --gradient-accent: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    /* Primary Colors - Modern Blue Palette */
+    --primary-color: #2563eb;           /* Modern blue */
+    --primary-light: #3b82f6;           /* Lighter blue */
+    --primary-dark: #1d4ed8;            /* Darker blue */
     
-    /* Spacing */
-    --header-height: 70px;
+    /* Secondary Colors - Sophisticated Grays */
+    --secondary-color: #64748b;         /* Slate gray */
+    --secondary-light: #94a3b8;         /* Light slate */
+    --secondary-dark: #475569;          /* Dark slate */
+    
+    /* Accent Colors - Professional Highlights */
+    --accent-color: #06b6d4;            /* Cyan accent */
+    --accent-color-2: #10b981;          /* Emerald accent */
+    --accent-hover: #0891b2;            /* Cyan hover */
+    
+    /* Neutral Colors - Clean Background */
+    --background-primary: #ffffff;      /* Pure white */
+    --background-secondary: #f8fafc;    /* Off-white */
+    --background-tertiary: #f1f5f9;     /* Light gray */
+    
+    /* Text Colors - High Contrast */
+    --text-primary: #0f172a;            /* Near black */
+    --text-secondary: #334155;          /* Dark gray */
+    --text-muted: #64748b;              /* Medium gray */
+    --text-inverse: #ffffff;            /* White text */
+    
+    /* Border Colors - Subtle Dividers */
+    --border-color: #e2e8f0;            /* Light border */
+    --border-hover: #cbd5e1;            /* Hover border */
+    --border-focus: #3b82f6;            /* Focus border */
+    
+    /* Shadow Colors - Depth */
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+    
+    /* Dark Mode Colors */
+    --dark-bg-primary: #0f172a;         /* Dark navy */
+    --dark-bg-secondary: #1e293b;       /* Dark slate */
+    --dark-bg-tertiary: #334155;        /* Medium slate */
+    --dark-text-primary: #f8fafc;       /* Light text */
+    --dark-text-secondary: #cbd5e1;     /* Medium light */
+    --dark-border: #475569;             /* Dark border */
+    
+    /* Status Colors - Feedback */
+    --success-color: #059669;           /* Green success */
+    --warning-color: #d97706;           /* Orange warning */
+    --error-color: #dc2626;             /* Red error */
+    --info-color: #2563eb;              /* Blue info */
+    
+    /* Layout Measurements */
     --sidebar-width: 280px;
-    --ai-panel-width: 350px;
-    --content-padding: 2rem;
-    
-    /* Animation */
-    --transition-fast: 0.2s ease;
-    --transition-medium: 0.3s ease;
+    --header-height: 64px;
+    --border-radius: 8px;
+    --border-radius-lg: 12px;
+    --transition-fast: 0.15s ease;
+    --transition-normal: 0.3s ease;
     --transition-slow: 0.5s ease;
+    
+    /* Typography */
+    --font-family-primary: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-family-mono: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+    --font-size-xs: 0.75rem;      /* 12px */
+    --font-size-sm: 0.875rem;     /* 14px */
+    --font-size-base: 1rem;       /* 16px */
+    --font-size-lg: 1.125rem;     /* 18px */
+    --font-size-xl: 1.25rem;      /* 20px */
+    --font-size-2xl: 1.5rem;      /* 24px */
+    --font-size-3xl: 1.875rem;    /* 30px */
+    --font-size-4xl: 2.25rem;     /* 36px */
+    
+    /* Line Heights */
+    --leading-tight: 1.25;
+    --leading-normal: 1.5;
+    --leading-relaxed: 1.75;
+    
+    /* Font Weights */
+    --font-normal: 400;
+    --font-medium: 500;
+    --font-semibold: 600;
+    --font-bold: 700;
 }
 
-/* Dark theme */
+/* Dark Theme - Modern Professional */
 [data-theme="dark"] {
-    --primary-color: #81a1ff;
-    --primary-dark: #6b8aef;
-    --secondary-color: #9575cd;
-    --accent-color: #ff6b9d;
-    --background-color: #0f1419;
-    --surface-color: #1a202c;
-    --text-primary: #f7fafc;
-    --text-secondary: #cbd5e0;
-    --text-muted: #718096;
-    --border-color: #2d3748;
+    --primary-color: #3b82f6;
+    --primary-light: #60a5fa;
+    --primary-dark: #2563eb;
+    --secondary-color: #94a3b8;
+    --accent-color: #22d3ee;
+    --accent-color-2: #34d399;
+    
+    --background-primary: var(--dark-bg-primary);
+    --background-secondary: var(--dark-bg-secondary);
+    --background-tertiary: var(--dark-bg-tertiary);
+    
+    --text-primary: var(--dark-text-primary);
+    --text-secondary: var(--dark-text-secondary);
+    --text-muted: #94a3b8;
+    
+    --border-color: var(--dark-border);
+    --border-hover: #64748b;
+    --border-focus: #3b82f6;
 }
 
 /* Reset and base styles */
@@ -55,12 +118,16 @@ html {
 }
 
 body {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    background-color: var(--background-color);
+    font-family: var(--font-family-primary);
+    background-color: var(--background-primary);
     color: var(--text-primary);
-    line-height: 1.6;
+    line-height: var(--leading-normal);
+    font-size: var(--font-size-base);
+    font-weight: var(--font-normal);
     overflow-x: hidden;
-    transition: background-color var(--transition-medium);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    transition: all var(--transition-normal);
 }
 
 /* Loading screen */
@@ -70,13 +137,13 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
-    background: var(--background-color);
+    background: var(--background-primary);
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     z-index: 9999;
-    transition: opacity var(--transition-medium);
+    transition: opacity var(--transition-normal);
 }
 
 .loading-spinner {
@@ -101,11 +168,13 @@ body {
     left: 0;
     right: 0;
     height: var(--header-height);
-    background: var(--surface-color);
+    background: rgba(255, 255, 255, 0.95);
     border-bottom: 1px solid var(--border-color);
     z-index: 1000;
-    backdrop-filter: blur(10px);
-    transition: all var(--transition-medium);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    transition: all var(--transition-normal);
+    box-shadow: var(--shadow-sm);
 }
 
 .header-content {
@@ -143,28 +212,32 @@ body {
     padding: 0.5rem 1rem;
     background: transparent;
     border: 1px solid var(--border-color);
-    border-radius: 8px;
+    border-radius: var(--border-radius);
     color: var(--text-primary);
     cursor: pointer;
     transition: all var(--transition-fast);
     font-family: inherit;
+    font-weight: var(--font-medium);
 }
 
 .lang-btn:hover, .theme-btn:hover {
     background: var(--primary-color);
-    color: white;
+    color: var(--text-inverse);
     border-color: var(--primary-color);
+    box-shadow: var(--shadow-sm);
 }
 
 .login-btn {
-    background: var(--gradient-primary);
-    color: white;
-    border: none;
+    background: var(--primary-color);
+    color: var(--text-inverse);
+    border: 1px solid var(--primary-color);
 }
 
 .login-btn:hover {
+    background: var(--primary-dark);
+    border-color: var(--primary-dark);
     transform: translateY(-1px);
-    box-shadow: var(--shadow-medium);
+    box-shadow: var(--shadow-md);
 }
 
 /* User menu */
@@ -184,10 +257,10 @@ body {
     position: absolute;
     top: 100%;
     right: 0;
-    background: var(--surface-color);
+    background: var(--background-primary);
     border: 1px solid var(--border-color);
-    border-radius: 8px;
-    box-shadow: var(--shadow-heavy);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-lg);
     min-width: 200px;
     opacity: 0;
     visibility: hidden;

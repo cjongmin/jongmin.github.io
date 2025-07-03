@@ -248,7 +248,21 @@ const sectionTemplates = {
 
 // Initialize application
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM loaded, initializing app...');
+    
+    // Initialize the app
     initializeApp();
+    
+    // Set up navigation menu click handlers
+    setupNavigationEventListeners();
+    
+    // Set up header controls
+    setupHeaderEventListeners();
+    
+    // Set up mobile menu handlers
+    setupMobileEventListeners();
+    
+    console.log('App initialization complete');
 });
 
 function initializeApp() {
@@ -760,20 +774,127 @@ function renderFilteredPublications(publications) {
     AppState.publications = originalPublications;
 }
 
-// Window event handlers
+// Navigation event listeners
+function setupNavigationEventListeners() {
+    // Add click event listeners to all navigation links
+    document.querySelectorAll('.nav-item a').forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const sectionName = this.getAttribute('href').substring(1); // Remove # from href
+            console.log('Navigation clicked:', sectionName);
+            showSection(sectionName);
+        });
+    });
+    
+    console.log('Navigation event listeners set up');
+}
+
+// Header controls event listeners
+function setupHeaderEventListeners() {
+    // Theme toggle button
+    const themeBtn = document.getElementById('theme-btn');
+    if (themeBtn) {
+        themeBtn.addEventListener('click', toggleTheme);
+    }
+    
+    // Language toggle button
+    const langBtn = document.getElementById('lang-btn');
+    if (langBtn) {
+        langBtn.addEventListener('click', toggleLanguage);
+    }
+    
+    // Login button (if not already handled by firebase-config.js)
+    const loginBtn = document.getElementById('login-btn');
+    if (loginBtn && !loginBtn.hasAttribute('data-listener-added')) {
+        loginBtn.addEventListener('click', function() {
+            // This will be handled by firebase-config.js mock login
+            if (typeof mockLogin === 'function') {
+                mockLogin('google');
+            } else {
+                showLoginModal();
+            }
+        });
+        loginBtn.setAttribute('data-listener-added', 'true');
+    }
+    
+    // Logout button (if not already handled by firebase-config.js)
+    const logoutBtn = document.getElementById('logout-btn');
+    if (logoutBtn && !logoutBtn.hasAttribute('data-listener-added')) {
+        logoutBtn.addEventListener('click', function() {
+            // This will be handled by firebase-config.js mock logout
+            if (typeof mockLogout === 'function') {
+                mockLogout();
+            }
+        });
+        logoutBtn.setAttribute('data-listener-added', 'true');
+    }
+    
+    console.log('Header event listeners set up');
+}
+
+// Mobile event listeners
+function setupMobileEventListeners() {
+    // Mobile menu toggle
+    const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+    if (mobileMenuBtn) {
+        mobileMenuBtn.addEventListener('click', toggleMobileMenu);
+    }
+    
+    // AI panel toggle for mobile
+    const aiToggleBtn = document.getElementById('ai-toggle-btn');
+    if (aiToggleBtn) {
+        aiToggleBtn.addEventListener('click', toggleAIPanel);
+    }
+    
+    // Close mobile menu when clicking on nav items
+    document.querySelectorAll('.nav-item a').forEach(link => {
+        link.addEventListener('click', function() {
+            const sidebar = document.querySelector('.sidebar');
+            if (sidebar && sidebar.classList.contains('mobile-open')) {
+                toggleMobileMenu();
+            }
+        });
+    });
+    
+    console.log('Mobile event listeners set up');
+}
+
+// Handle browser back/forward buttons
 window.addEventListener('popstate', function(event) {
     const section = event.state?.section || 'about';
     showSection(section);
 });
 
-// Handle clicks outside modals
-document.addEventListener('click', function(event) {
-    if (event.target.classList.contains('modal')) {
-        const modal = event.target;
-        modal.classList.remove('active');
-        document.body.style.overflow = '';
+// Handle keyboard shortcuts
+document.addEventListener('keydown', function(e) {
+    // Ctrl/Cmd + K to focus search
+    if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        const searchInput = document.getElementById('pub-search');
+        if (searchInput) {
+            searchInput.focus();
+        }
+    }
+    
+    // Escape key to close modals
+    if (e.key === 'Escape') {
+        const activeModal = document.querySelector('.modal.active');
+        if (activeModal) {
+            activeModal.classList.remove('active');
+            document.body.style.overflow = '';
+        }
     }
 });
+
+// Handle URL hash on initial load
+window.addEventListener('load', function() {
+    const hash = window.location.hash.substring(1);
+    if (hash && hash !== AppState.currentSection) {
+        showSection(hash);
+    }
+});
+
+console.log('Script.js loaded successfully');
 
 // Export functions for use in other modules
 window.AppState = AppState;
