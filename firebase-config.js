@@ -1,13 +1,13 @@
 // Firebase configuration - Set to your actual Firebase project config
 const firebaseConfig = {
-    // Replace with your Firebase project configuration
-    apiKey: "your-api-key",
-    authDomain: "your-project.firebaseapp.com",
-    projectId: "your-project-id",
-    storageBucket: "your-project.appspot.com",
-    messagingSenderId: "123456789",
-    appId: "your-app-id"
-};
+    apiKey: "AIzaSyCNybLoW5J1o7oj7fz0zCQGmuC9DpCCVpI",
+    authDomain: "research-profile-8ee9b.firebaseapp.com",
+    projectId: "research-profile-8ee9b",
+    storageBucket: "research-profile-8ee9b.firebasestorage.app",
+    messagingSenderId: "108930331185",
+    appId: "1:108930331185:web:ec6dc184c1ef342416db10",
+    measurementId: "G-BGW23T7ZV5"
+  };
 
 // Global variables
 let app, auth, db;
