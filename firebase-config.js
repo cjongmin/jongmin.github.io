@@ -24,13 +24,6 @@ function hasValidFirebaseConfig() {
 // Initialize Firebase
 function initializeFirebase() {
     try {
-        // 일시적으로 Mock 모드로 전환 (Firebase 도메인 승인 전까지)
-        console.log('Using mock mode temporarily due to domain authorization');
-        initializeMockMode();
-        return false;
-        
-        // 실제 Firebase 설정 (도메인 승인 후 사용)
-        /*
         if (hasValidFirebaseConfig() && typeof firebase !== 'undefined') {
             console.log('Initializing Firebase with real config...');
             
@@ -56,7 +49,6 @@ function initializeFirebase() {
             initializeMockMode();
             return false;
         }
-        */
     } catch (error) {
         console.warn('Firebase initialization failed, switching to mock mode:', error);
         initializeMockMode();

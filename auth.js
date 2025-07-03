@@ -6,17 +6,13 @@ import { app } from './firebase-config.js';
 const auth = getAuth(app);
 const db = getFirestore(app);
 
+// Admin email for special permissions
+const ADMIN_EMAIL = 'cjmin@gmail.com';
+
 // Function to check if a user is an admin
 async function isAdmin(user) {
-    if (!user) return false;
-    const adminDocRef = doc(db, "admins", user.uid);
-    try {
-        const adminDocSnap = await getDoc(adminDocRef);
-        return adminDocSnap.exists();
-    } catch (error) {
-        console.error("Error checking admin status:", error);
-        return false;
-    }
+    if (!user || !user.email) return false;
+    return user.email === ADMIN_EMAIL;
 }
 
 class AuthManager {
@@ -165,72 +161,9 @@ function showSignupModal() {
     createSignupModal();
 }
 
+// 회원가입은 로그인과 동일하게 처리 (OAuth만 사용)
 function createSignupModal() {
-    const modalHTML = `
-        <div id="signup-modal" class="modal">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h2 data-i18n="signup">Sign Up</h2>
-                    <button class="modal-close" onclick="closeModal('signup-modal')">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <div class="login-options">
-                        <button class="login-btn github" onclick="loginWithGitHub()">
-                            <i class="fab fa-github"></i>
-                            <span data-i18n="signup_github">Sign up with GitHub</span>
-                        </button>
-                        <button class="login-btn google" onclick="loginWithGoogle()">
-                            <i class="fab fa-google"></i>
-                            <span data-i18n="signup_google">Sign up with Google</span>
-                        </button>
-                    </div>
-                    
-                    <div class="login-divider">
-                        <span data-i18n="or">또는</span>
-                    </div>
-                    
-                    <form id="email-signup-form" onsubmit="handleEmailSignup(event)">
-                        <div class="form-group">
-                            <label for="signup-name" data-i18n="name">Name</label>
-                            <input type="text" id="signup-name" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="signup-email" data-i18n="email">Email</label>
-                            <input type="email" id="signup-email" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="signup-password" data-i18n="password">Password</label>
-                            <input type="password" id="signup-password" required minlength="6">
-                        </div>
-                        <div class="form-group">
-                            <label for="signup-confirm-password" data-i18n="confirm_password">Confirm Password</label>
-                            <input type="password" id="signup-confirm-password" required minlength="6">
-                        </div>
-                        <button type="submit" class="submit-btn">
-                            <span data-i18n="signup">Sign Up</span>
-                        </button>
-                    </form>
-                    
-                    <div class="signup-link">
-                        <span data-i18n="have_account">이미 계정이 있으신가요?</span>
-                        <a href="#" onclick="showLoginModal()" data-i18n="login">로그인</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    `;
-    
-    // Remove existing signup modal if any
-    const existingModal = document.getElementById('signup-modal');
-    if (existingModal) {
-        existingModal.remove();
-    }
-    
-    document.body.insertAdjacentHTML('beforeend', modalHTML);
-    updateLanguage();
-    showModal('signup-modal');
+    showLoginModal(); // 로그인 모달과 동일
 }
 
 function handleEmailSignup(event) {

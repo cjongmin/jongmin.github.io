@@ -23,6 +23,8 @@ const i18n = {
         awards: 'Awards',
         contact: 'Contact',
         feedback: 'Feedback',
+        timeline: 'Timeline',
+        collaboration: 'Collaboration',
         profile_name: 'Dr. [Your Name]',
         profile_title: 'AI 연구자 & 데이터 사이언티스트',
         research_interests: '연구 관심사',
@@ -38,7 +40,15 @@ const i18n = {
         message: '메시지',
         or: '또는',
         no_account: '계정이 없으신가요?',
-        signup: '회원가입'
+        signup: '회원가입',
+        login_welcome: 'Google 또는 GitHub 계정으로 로그인하세요',
+        login_google: 'Google로 로그인',
+        login_github: 'GitHub로 로그인',
+        api_setup: 'API 키 설정',
+        api_setup_desc: 'AI 어시스턴트를 사용하려면 API 키를 설정해주세요. 모든 키는 안전하게 암호화되어 저장됩니다.',
+        citations: '인용수',
+        rating: '평점',
+        comment: '코멘트'
     },
     en: {
         login: 'Login',
@@ -51,6 +61,8 @@ const i18n = {
         awards: 'Awards',
         contact: 'Contact',
         feedback: 'Feedback',
+        timeline: 'Timeline',
+        collaboration: 'Collaboration',
         profile_name: 'Dr. [Your Name]',
         profile_title: 'AI Researcher & Data Scientist',
         research_interests: 'Research Interests',
@@ -66,7 +78,15 @@ const i18n = {
         message: 'Message',
         or: 'or',
         no_account: "Don't have an account?",
-        signup: 'Sign Up'
+        signup: 'Sign Up',
+        login_welcome: 'Please login with your Google or GitHub account',
+        login_google: 'Login with Google',
+        login_github: 'Login with GitHub',
+        api_setup: 'API Key Setup',
+        api_setup_desc: 'Please set up API keys to use the AI assistant. All keys are securely encrypted and stored.',
+        citations: 'Citations',
+        rating: 'Rating',
+        comment: 'Comment'
     }
 };
 
@@ -163,8 +183,8 @@ const sectionTemplates = {
                         <span class="tech-tag">Firebase</span>
                     </div>
                     <div class="project-links">
-                        <a href="#" class="project-link"><i class="fab fa-github"></i> GitHub</a>
-                        <a href="#" class="project-link"><i class="fas fa-external-link-alt"></i> Demo</a>
+                        <a href="javascript:void(0)" class="project-link" onclick="event.preventDefault()"><i class="fab fa-github"></i> GitHub</a>
+                        <a href="javascript:void(0)" class="project-link" onclick="event.preventDefault()"><i class="fas fa-external-link-alt"></i> Demo</a>
                     </div>
                 </div>
             </div>
@@ -183,8 +203,8 @@ const sectionTemplates = {
                         <span class="tech-tag">Docker</span>
                     </div>
                     <div class="project-links">
-                        <a href="#" class="project-link"><i class="fab fa-github"></i> GitHub</a>
-                        <a href="#" class="project-link"><i class="fas fa-external-link-alt"></i> Demo</a>
+                        <a href="javascript:void(0)" class="project-link" onclick="event.preventDefault()"><i class="fab fa-github"></i> GitHub</a>
+                        <a href="javascript:void(0)" class="project-link" onclick="event.preventDefault()"><i class="fas fa-external-link-alt"></i> Demo</a>
                     </div>
                 </div>
             </div>
@@ -218,15 +238,15 @@ const sectionTemplates = {
             <div class="contact-info">
                 <div class="contact-item">
                     <i class="fas fa-envelope"></i>
-                    <span>your.email@university.edu</span>
+                    <span>jongmin@mmai.io</span>
                 </div>
                 <div class="contact-item">
                     <i class="fas fa-phone"></i>
-                    <span>+82-10-1234-5678</span>
+                    <span>+82 10-2925-6477</span>
                 </div>
                 <div class="contact-item">
                     <i class="fas fa-map-marker-alt"></i>
-                    <span>Seoul, South Korea</span>
+                    <span>KAIST, 291 Daehak-ro, Yuseong-gu, Daejeon, Republic of Korea, 34141</span>
                 </div>
             </div>
             
@@ -647,38 +667,18 @@ function createLoginModal() {
                     </button>
                 </div>
                 <div class="modal-body">
+                    <div class="login-welcome">
+                        <p data-i18n="login_welcome">Google 또는 GitHub 계정으로 로그인하세요</p>
+                    </div>
                     <div class="login-options">
-                        <button class="login-btn github" onclick="loginWithGitHub()">
-                            <i class="fab fa-github"></i>
-                            <span data-i18n="login_github">Login with GitHub</span>
-                        </button>
                         <button class="login-btn google" onclick="loginWithGoogle()">
                             <i class="fab fa-google"></i>
-                            <span data-i18n="login_google">Login with Google</span>
+                            <span data-i18n="login_google">Google로 로그인</span>
                         </button>
-                    </div>
-                    
-                    <div class="login-divider">
-                        <span data-i18n="or">또는</span>
-                    </div>
-                    
-                    <form id="email-login-form" onsubmit="handleEmailLogin(event)">
-                        <div class="form-group">
-                            <label for="login-email" data-i18n="email">Email</label>
-                            <input type="email" id="login-email" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="login-password" data-i18n="password">Password</label>
-                            <input type="password" id="login-password" required>
-                        </div>
-                        <button type="submit" class="submit-btn">
-                            <span data-i18n="login">Login</span>
+                        <button class="login-btn github" onclick="loginWithGitHub()">
+                            <i class="fab fa-github"></i>
+                            <span data-i18n="login_github">GitHub로 로그인</span>
                         </button>
-                    </form>
-                    
-                    <div class="signup-link">
-                        <span data-i18n="no_account">계정이 없으신가요?</span>
-                        <a href="#" onclick="showSignupModal()" data-i18n="signup">회원가입</a>
                     </div>
                 </div>
             </div>
@@ -814,7 +814,24 @@ function loadAwards() {
             title: "Best Paper Award",
             organization: "International Conference on Machine Learning",
             year: 2023,
-            description: "Awarded for outstanding contribution to the field of machine learning."
+            description: "Awarded for outstanding contribution to the field of machine learning.",
+            icon: "trophy"
+        },
+        {
+            id: 2,
+            title: "Outstanding Researcher Award",
+            organization: "Korean AI Society",
+            year: 2022,
+            description: "Recognition for exceptional research contributions in artificial intelligence",
+            icon: "medal"
+        },
+        {
+            id: 3,
+            title: "Excellence in Teaching Award",
+            organization: "KAIST",
+            year: 2021,
+            description: "Awarded for exceptional teaching performance and student mentorship",
+            icon: "graduation-cap"
         }
     ];
     
@@ -833,15 +850,17 @@ function renderAwards() {
     
     const awardsHTML = AppState.awards.map(award => `
         <div class="award-card">
-            <div class="award-icon">
-                <i class="fas fa-trophy"></i>
+            <div class="award-header">
+                <div class="award-icon">
+                    <i class="fas fa-${award.icon || 'trophy'}"></i>
+                </div>
+                <div class="award-info">
+                    <h3 class="award-title">${award.title}</h3>
+                    <div class="award-organization">${award.organization}</div>
+                    <div class="award-date">${award.year}</div>
+                </div>
             </div>
-            <div class="award-content">
-                <h3 class="award-title">${award.title}</h3>
-                <div class="award-organization">${award.organization}</div>
-                <div class="award-year">${award.year}</div>
-                <p class="award-description">${award.description}</p>
-            </div>
+            <div class="award-description">${award.description}</div>
         </div>
     `).join('');
     
@@ -876,34 +895,148 @@ function updateStats() {
 function handleContactForm(event) {
     event.preventDefault();
     
-    const formData = {
-        name: document.getElementById('contact-name').value,
-        email: document.getElementById('contact-email').value,
-        subject: document.getElementById('contact-subject').value,
-        message: document.getElementById('contact-message').value
+    const name = document.getElementById('contact-name').value;
+    const email = document.getElementById('contact-email').value;
+    const subject = document.getElementById('contact-subject').value;
+    const message = document.getElementById('contact-message').value;
+    
+    // EmailJS를 사용하여 이메일 전송
+    const templateParams = {
+        to_email: 'jongmin@mmai.io',
+        from_name: name,
+        from_email: email,
+        subject: `[Contact] ${name}; ${email}`,
+        message: message,
+        original_subject: subject
     };
     
-    // Here you would typically send the data to your backend
-    console.log('Contact form submitted:', formData);
-    
-    showToast('Message sent successfully!');
-    event.target.reset();
+    // EmailJS 초기화 (실제 서비스에서는 환경변수 사용)
+    if (typeof emailjs !== 'undefined') {
+        emailjs.send('service_id', 'template_id', templateParams)
+            .then(() => {
+                showToast('메시지가 성공적으로 전송되었습니다!', 'success');
+                document.getElementById('contact-form').reset();
+            })
+            .catch((error) => {
+                console.error('Email send error:', error);
+                showToast('메시지 전송에 실패했습니다. 직접 jongmin@mmai.io로 연락해주세요.', 'error');
+            });
+    } else {
+        // EmailJS가 로드되지 않은 경우 mailto 링크 생성
+        const mailtoLink = `mailto:jongmin@mmai.io?subject=${encodeURIComponent(`[Contact] ${name}; ${email}`)}&body=${encodeURIComponent(`From: ${name} (${email})\nSubject: ${subject}\n\nMessage:\n${message}`)}`;
+        window.open(mailtoLink);
+        showToast('이메일 클라이언트를 통해 메시지를 보내주세요.', 'info');
+        document.getElementById('contact-form').reset();
+    }
 }
 
 function handleFeedbackForm(event) {
     event.preventDefault();
     
-    const formData = {
-        rating: document.querySelector('.rating-stars .active')?.dataset.rating || 0,
-        comment: document.getElementById('feedback-comment').value
+    // 로그인 확인
+    if (!auth.currentUser) {
+        showToast('피드백을 남기려면 로그인이 필요합니다.', 'error');
+        showLoginModal();
+        return;
+    }
+    
+    const rating = document.querySelector('.rating-stars .active')?.dataset?.rating || 0;
+    const comment = document.getElementById('feedback-comment').value;
+    
+    if (!rating) {
+        showToast('평점을 선택해주세요.', 'error');
+        return;
+    }
+    
+    const feedbackData = {
+        userId: auth.currentUser.uid,
+        userName: auth.currentUser.displayName || 'Anonymous',
+        userEmail: auth.currentUser.email,
+        rating: parseInt(rating),
+        comment: comment,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+        createdAt: new Date().toISOString()
     };
     
-    // Here you would typically save to Firebase
-    console.log('Feedback submitted:', formData);
-    
-    showToast('Feedback submitted successfully!');
-    event.target.reset();
-    resetRating();
+    // Firebase에 저장
+    db.collection('feedback').add(feedbackData)
+        .then(() => {
+            showToast('피드백이 성공적으로 등록되었습니다!', 'success');
+            document.getElementById('feedback-form').reset();
+            resetRating();
+            loadFeedback(); // 피드백 목록 새로고침
+        })
+        .catch((error) => {
+            console.error('Error adding feedback:', error);
+            showToast('피드백 등록에 실패했습니다.', 'error');
+        });
+}
+
+// Load feedback from Firebase
+async function loadFeedback() {
+    try {
+        const feedbackList = document.getElementById('feedback-list');
+        if (!feedbackList) return;
+        
+        const snapshot = await db.collection('feedback')
+            .orderBy('timestamp', 'desc')
+            .limit(10)
+            .get();
+        
+        if (snapshot.empty) {
+            feedbackList.innerHTML = '<p class="no-feedback">아직 피드백이 없습니다. 첫 번째 피드백을 남겨주세요!</p>';
+            return;
+        }
+        
+        const feedbackHTML = snapshot.docs.map(doc => {
+            const data = doc.data();
+            const createdAt = data.timestamp ? data.timestamp.toDate() : new Date(data.createdAt);
+            
+            return `
+                <div class="feedback-item">
+                    <div class="feedback-header">
+                        <div class="feedback-user">
+                            <strong>${data.userName}</strong>
+                        </div>
+                        <div class="feedback-rating">
+                            ${generateStarRating(data.rating)}
+                        </div>
+                    </div>
+                    <div class="feedback-time">${formatDate(createdAt)}</div>
+                    <div class="feedback-comment">${data.comment || '(코멘트 없음)'}</div>
+                </div>
+            `;
+        }).join('');
+        
+        feedbackList.innerHTML = feedbackHTML;
+        
+    } catch (error) {
+        console.error('Error loading feedback:', error);
+        const feedbackList = document.getElementById('feedback-list');
+        if (feedbackList) {
+            feedbackList.innerHTML = '<p class="error">피드백을 불러오는데 실패했습니다.</p>';
+        }
+    }
+}
+
+// Generate star rating HTML
+function generateStarRating(rating) {
+    let stars = '';
+    for (let i = 1; i <= 5; i++) {
+        stars += `<i class="fas fa-star ${i <= rating ? 'active' : ''}"></i>`;
+    }
+    return stars;
+}
+
+// Format date for display
+function formatDate(date) {
+    return date.toLocaleDateString('ko-KR', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
 }
 
 function setRating(rating) {
@@ -918,7 +1051,8 @@ function setRating(rating) {
 }
 
 function resetRating() {
-    document.querySelectorAll('.rating-stars i').forEach(star => {
+    const stars = document.querySelectorAll('.rating-stars i');
+    stars.forEach(star => {
         star.classList.remove('active');
     });
 }
@@ -1110,4 +1244,43 @@ window.toggleAIPanel = toggleAIPanel;
 window.showModal = showModal;
 window.closeModal = closeModal;
 window.showLoginModal = showLoginModal;
-window.showToast = showToast; 
+window.showToast = showToast;
+
+// Collaboration form handler
+function handleCollaborationForm(event) {
+    event.preventDefault();
+    
+    const name = document.getElementById('collab-name').value;
+    const email = document.getElementById('collab-email').value;
+    const organization = document.getElementById('collab-organization').value;
+    const proposal = document.getElementById('collab-proposal').value;
+    
+    // EmailJS를 사용하여 이메일 전송
+    const templateParams = {
+        to_email: 'jongmin@mmai.io',
+        from_name: name,
+        from_email: email,
+        subject: `[Collaboration] ${name}; ${email}`,
+        message: `From: ${name} (${email})\nOrganization: ${organization}\n\nCollaboration Proposal:\n${proposal}`,
+        organization: organization,
+        proposal: proposal
+    };
+    
+    if (typeof emailjs !== 'undefined') {
+        emailjs.send('service_id', 'template_id', templateParams)
+            .then(() => {
+                showToast('협업 제안이 성공적으로 전송되었습니다!', 'success');
+                document.getElementById('collaboration-form').reset();
+            })
+            .catch((error) => {
+                console.error('Email send error:', error);
+                showToast('협업 제안 전송에 실패했습니다. 직접 jongmin@mmai.io로 연락해주세요.', 'error');
+            });
+    } else {
+        // EmailJS가 로드되지 않은 경우 mailto 링크 생성
+        const mailtoLink = `mailto:jongmin@mmai.io?subject=${encodeURIComponent(`[Collaboration] ${name}; ${email}`)}&body=${encodeURIComponent(`From: ${name} (${email})\nOrganization: ${organization}\n\nCollaboration Proposal:\n${proposal}`)}`;
+        window.open(mailtoLink);
+        showToast('이메일 클라이언트를 통해 협업 제안을 보내주세요.', 'info');
+        document.getElementById('collaboration-form').reset();
+    }
+} 

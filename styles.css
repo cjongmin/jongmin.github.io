@@ -1042,7 +1042,9 @@ body {
 
 /* Content Sections */
 .about-content {
-    max-width: 800px;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 2rem;
 }
 
 .about-text p {
@@ -1694,4 +1696,343 @@ body {
     .main-content {
         width: 100%;
     }
+}
+
+/* Publications Section Styles */
+.publications-list {
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.publication-card {
+    background: var(--surface-color);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-lg);
+    padding: 2rem;
+    margin-bottom: 2rem;
+    transition: all var(--transition-normal);
+    box-shadow: var(--shadow-sm);
+}
+
+.publication-card:hover {
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-2px);
+    border-color: var(--primary-color);
+}
+
+.publication-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+}
+
+.publication-title {
+    font-size: var(--font-size-xl);
+    font-weight: var(--font-bold);
+    color: var(--text-primary);
+    line-height: 1.4;
+    flex: 1;
+    margin-right: 1rem;
+}
+
+.publication-year {
+    background: var(--primary-color);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: var(--border-radius);
+    font-weight: var(--font-semibold);
+    font-size: var(--font-size-sm);
+    flex-shrink: 0;
+}
+
+.publication-authors {
+    color: var(--text-secondary);
+    font-size: var(--font-size-md);
+    margin-bottom: 0.5rem;
+    font-style: italic;
+}
+
+.publication-venue {
+    color: var(--primary-color);
+    font-weight: var(--font-semibold);
+    margin-bottom: 1rem;
+}
+
+.publication-abstract {
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
+}
+
+.publication-links {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+}
+
+.pub-link {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: var(--border-radius);
+    text-decoration: none;
+    font-weight: var(--font-medium);
+    transition: all var(--transition-fast);
+    border: 1px solid transparent;
+}
+
+.pub-link.pdf {
+    background: #dc2626;
+    color: white;
+}
+
+.pub-link.pdf:hover {
+    background: #b91c1c;
+    transform: translateY(-1px);
+}
+
+.pub-link.code {
+    background: var(--dark-bg-primary);
+    color: white;
+}
+
+.pub-link.code:hover {
+    background: #1f2937;
+    transform: translateY(-1px);
+}
+
+.pub-link.project {
+    background: var(--primary-color);
+    color: white;
+}
+
+.pub-link.project:hover {
+    background: var(--primary-dark);
+    transform: translateY(-1px);
+}
+
+.publication-stats {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color);
+    color: var(--text-muted);
+    font-size: var(--font-size-sm);
+}
+
+.citations {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+/* Awards Section Styles */
+.awards-list {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.award-card {
+    background: var(--surface-color);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-lg);
+    padding: 2rem;
+    margin-bottom: 1.5rem;
+    transition: all var(--transition-normal);
+    box-shadow: var(--shadow-sm);
+    position: relative;
+    overflow: hidden;
+}
+
+.award-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: var(--gradient-primary);
+}
+
+.award-card:hover {
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-2px);
+    border-color: var(--primary-color);
+}
+
+.award-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.award-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 60px;
+    height: 60px;
+    background: var(--gradient-primary);
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.award-icon i {
+    font-size: 1.5rem;
+    color: white;
+}
+
+.award-info {
+    flex: 1;
+}
+
+.award-title {
+    font-size: var(--font-size-xl);
+    font-weight: var(--font-bold);
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.award-organization {
+    color: var(--primary-color);
+    font-weight: var(--font-semibold);
+    margin-bottom: 0.25rem;
+}
+
+.award-date {
+    color: var(--text-muted);
+    font-size: var(--font-size-sm);
+}
+
+.award-description {
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-top: 1rem;
+}
+
+/* AI Assistant Enhanced Styles */
+.ai-message {
+    margin-bottom: 1rem;
+    padding: 0.75rem 1rem;
+    border-radius: var(--border-radius);
+    max-width: 85%;
+    word-wrap: break-word;
+}
+
+.ai-message.user {
+    background: var(--primary-color);
+    color: white;
+    margin-left: auto;
+    text-align: right;
+}
+
+.ai-message.ai {
+    background: var(--background-secondary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+}
+
+.ai-message.typing-indicator {
+    background: var(--background-secondary);
+    border: 1px solid var(--border-color);
+}
+
+.message-content {
+    line-height: 1.5;
+}
+
+.message-time {
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
+    margin-top: 0.5rem;
+    opacity: 0.7;
+}
+
+.typing-dots {
+    display: flex;
+    gap: 0.25rem;
+}
+
+.typing-dots span {
+    width: 6px;
+    height: 6px;
+    background: var(--text-muted);
+    border-radius: 50%;
+    animation: typingDots 1.4s infinite;
+}
+
+.typing-dots span:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.typing-dots span:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+@keyframes typingDots {
+    0%, 60%, 100% {
+        transform: translateY(0);
+        opacity: 0.5;
+    }
+    30% {
+        transform: translateY(-10px);
+        opacity: 1;
+    }
+}
+
+/* API Setup Modal */
+.api-setup-content {
+    max-width: 600px;
+}
+
+.api-key-section {
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+    background: var(--background-secondary);
+    border-radius: var(--border-radius);
+    border: 1px solid var(--border-color);
+}
+
+.api-key-section h3 {
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+    font-size: var(--font-size-lg);
+}
+
+.api-key-section .form-group {
+    margin-bottom: 0.5rem;
+}
+
+.api-key-section input {
+    font-family: monospace;
+    font-size: var(--font-size-sm);
+}
+
+.api-key-section small {
+    color: var(--text-muted);
+    font-size: var(--font-size-xs);
+    display: block;
+    margin-top: 0.5rem;
+}
+
+.api-setup-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 2rem;
+}
+
+.login-welcome {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.login-welcome p {
+    color: var(--text-secondary);
+    font-size: var(--font-size-md);
 } 

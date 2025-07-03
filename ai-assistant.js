@@ -2,9 +2,9 @@
 class AIAssistant {
     constructor() {
         this.apiKeys = {
-            openai: localStorage.getItem('openai_api_key') || '',
-            anthropic: localStorage.getItem('anthropic_api_key') || '',
-            google: localStorage.getItem('google_api_key') || ''
+            openai: null,
+            anthropic: null,
+            google: null
         };
         
         this.currentModel = localStorage.getItem('ai_model') || 'gpt-4';
