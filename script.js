@@ -147,8 +147,51 @@ const sectionTemplates = {
             </button>
         </div>
         
-        <div id="projects-grid" class="projects-grid">
-            <!-- Projects will be loaded here -->
+        <div class="projects-section">
+            <h2>Active Projects</h2>
+            <div class="project-card">
+                <div class="project-icon">
+                    <i class="fas fa-robot"></i>
+                </div>
+                <div class="project-content">
+                    <h3>AI-Powered Research Assistant</h3>
+                    <p>An intelligent system for helping researchers discover and analyze academic papers.</p>
+                    <div class="project-technologies">
+                        <span class="tech-tag">Python</span>
+                        <span class="tech-tag">TensorFlow</span>
+                        <span class="tech-tag">React</span>
+                        <span class="tech-tag">Firebase</span>
+                    </div>
+                    <div class="project-links">
+                        <a href="#" class="project-link"><i class="fab fa-github"></i> GitHub</a>
+                        <a href="#" class="project-link"><i class="fas fa-external-link-alt"></i> Demo</a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="project-card">
+                <div class="project-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <div class="project-content">
+                    <h3>Data Analytics Platform</h3>
+                    <p>A comprehensive platform for analyzing and visualizing research data with advanced machine learning capabilities.</p>
+                    <div class="project-technologies">
+                        <span class="tech-tag">Python</span>
+                        <span class="tech-tag">PostgreSQL</span>
+                        <span class="tech-tag">D3.js</span>
+                        <span class="tech-tag">Docker</span>
+                    </div>
+                    <div class="project-links">
+                        <a href="#" class="project-link"><i class="fab fa-github"></i> GitHub</a>
+                        <a href="#" class="project-link"><i class="fas fa-external-link-alt"></i> Demo</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="projects-grid" class="projects-grid hidden">
+            <!-- Dynamic projects will be loaded here -->
         </div>
     `,
     
@@ -585,8 +628,13 @@ function closeModal(modalId) {
 }
 
 function showLoginModal() {
-    createLoginModal();
+    if (!document.getElementById('login-modal')) {
+        createLoginModal();
+    }
+    showModal('login-modal');
 }
+
+// showSignupModal and createSignupModal functions are handled by auth.js
 
 function createLoginModal() {
     const modalHTML = `
@@ -639,8 +687,9 @@ function createLoginModal() {
     
     document.body.insertAdjacentHTML('beforeend', modalHTML);
     updateLanguage();
-    showModal('login-modal');
 }
+
+// handleEmailLogin and handleEmailSignup functions are handled by auth.js
 
 // Data loading functions
 function loadAllData() {
@@ -715,7 +764,7 @@ function loadProjects() {
             description: "An intelligent system for helping researchers discover and analyze academic papers.",
             technologies: ["Python", "TensorFlow", "React", "Firebase"],
             status: "Active",
-            image: "https://via.placeholder.com/300x200",
+            image: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDMwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIzMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0xMjAgODBMMTUwIDExMEwxODAgODBNMTIwIDEyMEgxODAiIHN0cm9rZT0iIzlDQTNBRiIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KPHN2Zz4K",
             github: "#",
             demo: "#"
         }
