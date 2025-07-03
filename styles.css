@@ -758,11 +758,20 @@ body {
 }
 
 .admin-only {
-    display: none;
+    /* Style for admin-only buttons and controls */
+    background-color: var(--accent-color-2);
+    color: #fff;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.8em;
+    margin-left: 10px;
+    transition: background-color 0.3s;
 }
 
-.admin-mode .admin-only {
-    display: initial;
+.admin-only:hover {
+    background-color: #c82333;
 }
 
 /* Responsive design */

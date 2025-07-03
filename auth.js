@@ -1,246 +1,136 @@
 // Authentication module
-class AuthManager {
-    constructor() {
-        this.providers = {
-            github: new firebase.auth.GithubAuthProvider(),
-            google: new firebase.auth.GoogleAuthProvider()
-        };
-        
-        this.setupProviders();
-    }
-    
-    setupProviders() {
-        // Configure GitHub provider
-        this.providers.github.addScope('user:email');
-        this.providers.github.addScope('read:user');
-        
-        // Configure Google provider
-        this.providers.google.addScope('profile');
-        this.providers.google.addScope('email');
-    }
-    
-    async signInWithGitHub() {
-        try {
-            const result = await auth.signInWithPopup(this.providers.github);
-            const user = result.user;
-            
-            console.log('GitHub sign-in successful:', user.email);
-            
-            // Track the login event
-            trackInteraction('login', { method: 'github' });
-            
-            // Close login modal if open
-            closeModal('login-modal');
-            
-            showToast('GitHub 로그인 성공!');
-            
-            return result;
-        } catch (error) {
-            console.error('GitHub sign-in error:', error);
-            this.handleAuthError(error);
-            throw error;
-        }
-    }
-    
-    async signInWithGoogle() {
-        try {
-            const result = await auth.signInWithPopup(this.providers.google);
-            const user = result.user;
-            
-            console.log('Google sign-in successful:', user.email);
-            
-            // Track the login event
-            trackInteraction('login', { method: 'google' });
-            
-            // Close login modal if open
-            closeModal('login-modal');
-            
-            showToast('Google 로그인 성공!');
-            
-            return result;
-        } catch (error) {
-            console.error('Google sign-in error:', error);
-            this.handleAuthError(error);
-            throw error;
-        }
-    }
-    
-    async signInWithEmail(email, password) {
-        try {
-            const result = await auth.signInWithEmailAndPassword(email, password);
-            const user = result.user;
-            
-            console.log('Email sign-in successful:', user.email);
-            
-            // Track the login event
-            trackInteraction('login', { method: 'email' });
-            
-            // Close login modal if open
-            closeModal('login-modal');
-            
-            showToast('이메일 로그인 성공!');
-            
-            return result;
-        } catch (error) {
-            console.error('Email sign-in error:', error);
-            this.handleAuthError(error);
-            throw error;
-        }
-    }
-    
-    async signUpWithEmail(email, password, displayName) {
-        try {
-            const result = await auth.createUserWithEmailAndPassword(email, password);
-            const user = result.user;
-            
-            // Update user profile
-            if (displayName) {
-                await user.updateProfile({
-                    displayName: displayName
-                });
-            }
-            
-            console.log('Email sign-up successful:', user.email);
-            
-            // Track the signup event
-            trackInteraction('signup', { method: 'email' });
-            
-            showToast('회원가입 성공!');
-            
-            return result;
-        } catch (error) {
-            console.error('Email sign-up error:', error);
-            this.handleAuthError(error);
-            throw error;
-        }
-    }
-    
-    async signOut() {
-        try {
-            await auth.signOut();
-            
-            console.log('User signed out');
-            
-            // Track the logout event
-            trackInteraction('logout');
-            
-            showToast('로그아웃되었습니다.');
-            
-        } catch (error) {
-            console.error('Sign-out error:', error);
-            showToast('로그아웃 중 오류가 발생했습니다.', 'error');
-        }
-    }
-    
-    async resetPassword(email) {
-        try {
-            await auth.sendPasswordResetEmail(email);
-            
-            console.log('Password reset email sent to:', email);
-            showToast('비밀번호 재설정 이메일이 발송되었습니다.');
-            
-        } catch (error) {
-            console.error('Password reset error:', error);
-            this.handleAuthError(error);
-            throw error;
-        }
-    }
-    
-    handleAuthError(error) {
-        let message = '';
-        
-        switch (error.code) {
-            case 'auth/user-not-found':
-                message = '존재하지 않는 사용자입니다.';
-                break;
-            case 'auth/wrong-password':
-                message = '잘못된 비밀번호입니다.';
-                break;
-            case 'auth/email-already-in-use':
-                message = '이미 사용 중인 이메일입니다.';
-                break;
-            case 'auth/weak-password':
-                message = '비밀번호가 너무 약합니다. (최소 6자 이상)';
-                break;
-            case 'auth/invalid-email':
-                message = '유효하지 않은 이메일 주소입니다.';
-                break;
-            case 'auth/popup-closed-by-user':
-                message = '로그인 창이 닫혔습니다.';
-                break;
-            case 'auth/popup-blocked':
-                message = '팝업이 차단되었습니다. 팝업 차단을 해제해주세요.';
-                break;
-            case 'auth/cancelled-popup-request':
-                message = '로그인 요청이 취소되었습니다.';
-                break;
-            case 'auth/network-request-failed':
-                message = '네트워크 연결을 확인해주세요.';
-                break;
-            case 'auth/too-many-requests':
-                message = '너무 많은 시도가 있었습니다. 잠시 후 다시 시도해주세요.';
-                break;
-            default:
-                message = '로그인 중 오류가 발생했습니다.';
-                console.error('Auth error details:', error);
-        }
-        
-        showToast(message, 'error');
-    }
-    
-    getCurrentUser() {
-        return auth.currentUser;
-    }
-    
-    isSignedIn() {
-        return !!auth.currentUser;
-    }
-    
-    async updateUserProfile(profileData) {
-        try {
-            const user = auth.currentUser;
-            if (!user) throw new Error('No user signed in');
-            
-            await user.updateProfile(profileData);
-            
-            // Update Firestore user document
-            if (db) {
-                await db.collection('users').doc(user.uid).update({
-                    ...profileData,
-                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
-            }
-            
-            console.log('User profile updated successfully');
-            showToast('프로필이 업데이트되었습니다.');
-            
-        } catch (error) {
-            console.error('Profile update error:', error);
-            showToast('프로필 업데이트 중 오류가 발생했습니다.', 'error');
-            throw error;
-        }
-    }
-    
-    async saveUserPreferences(preferences) {
-        try {
-            const user = auth.currentUser;
-            if (!user || !db) return;
-            
-            await db.collection('users').doc(user.uid).update({
-                preferences: preferences,
-                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
-            
-            console.log('User preferences saved');
-            
-        } catch (error) {
-            console.error('Error saving user preferences:', error);
-        }
+import { getAuth, onAuthStateChanged, GoogleAuthProvider, GithubAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
+import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+import { app } from './firebase-config.js';
+
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+// Function to check if a user is an admin
+async function isAdmin(user) {
+    if (!user) return false;
+    const adminDocRef = doc(db, "admins", user.uid);
+    try {
+        const adminDocSnap = await getDoc(adminDocRef);
+        return adminDocSnap.exists();
+    } catch (error) {
+        console.error("Error checking admin status:", error);
+        return false;
     }
 }
 
-// Initialize AuthManager
-const authManager = new AuthManager();
+class AuthManager {
+    constructor(ui) {
+        this.ui = ui;
+        this.setupEventListeners();
+        this.checkAuthState();
+    }
+
+    checkAuthState() {
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                console.log('User signed in:', user.displayName);
+                this.ui.setLoggedIn(user.displayName);
+
+                const userIsAdmin = await isAdmin(user);
+                if (userIsAdmin) {
+                    console.log("Welcome, Admin!");
+                    window.isAdmin = true;
+                    this.ui.showAdminFeatures();
+                } else {
+                    console.log("Welcome, User!");
+                    window.isAdmin = false;
+                    this.ui.hideAdminFeatures();
+                }
+            } else {
+                console.log('User is signed out');
+                this.ui.setLoggedOut();
+                window.isAdmin = false;
+                this.ui.hideAdminFeatures();
+            }
+        });
+    }
+
+    setupEventListeners() {
+        const loginButton = document.getElementById('login-btn');
+        const logoutButton = document.getElementById('logout-btn');
+
+        loginButton.addEventListener('click', () => this.loginWithGoogle());
+        logoutButton.addEventListener('click', () => this.logout());
+    }
+
+    loginWithGoogle() {
+        const provider = new GoogleAuthProvider();
+        signInWithPopup(auth, provider)
+            .then((result) => {
+                console.log("Google login successful", result.user);
+            })
+            .catch((error) => {
+                console.error("Google login error:", error);
+            });
+    }
+
+    logout() {
+        signOut(auth)
+            .then(() => {
+                console.log("Logout successful");
+            })
+            .catch((error) => {
+                console.error("Logout error:", error);
+            });
+    }
+}
+
+class UI {
+    showAdminFeatures() {
+        document.querySelectorAll('.admin-only').forEach(el => {
+            el.style.display = 'inline-block'; // or 'block' depending on element type
+        });
+        console.log("Admin features visible.");
+    }
+
+    hideAdminFeatures() {
+        document.querySelectorAll('.admin-only').forEach(el => {
+            el.style.display = 'none';
+        });
+        console.log("Admin features hidden.");
+    }
+
+    setLoggedIn(name) {
+        const loginButton = document.getElementById('login-btn');
+        const logoutButton = document.getElementById('logout-btn');
+        const userNameSpan = document.getElementById('user-name');
+        const adminPanelBtn = document.getElementById('admin-panel-btn');
+
+        loginButton.style.display = 'none';
+        logoutButton.style.display = 'block';
+        userNameSpan.textContent = name;
+        userNameSpan.style.display = 'block';
+        // The visibility of admin-panel-btn is now controlled by show/hideAdminFeatures
+    }
+
+    setLoggedOut() {
+        const loginButton = document.getElementById('login-btn');
+        const logoutButton = document.getElementById('logout-btn');
+        const userNameSpan = document.getElementById('user-name');
+        const adminPanelBtn = document.getElementById('admin-panel-btn');
+
+        loginButton.style.display = 'block';
+        logoutButton.style.display = 'none';
+        userNameSpan.textContent = '';
+        userNameSpan.style.display = 'none';
+        adminPanelBtn.style.display = 'none';
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const ui = new UI();
+    const authManager = new AuthManager(ui);
+
+    // Make instances available globally if needed for debugging or simple integrations
+    window.ui = ui;
+    window.authManager = authManager;
+});
 
 // Login functions for global use
 function loginWithGitHub() {
