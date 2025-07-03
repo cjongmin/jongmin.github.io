@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dr. [Your Name] - Researcher Profile</title>
+    <meta name="description" content="연구자 개인 프로필 페이지 - AI, Machine Learning, Data Science">
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    
+    <!-- External Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="loading-screen">
+        <div class="loading-spinner"></div>
+        <p>Loading Profile...</p>
+    </div>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <i class="fas fa-atom"></i>
+                <span>Research Profile</span>
+            </div>
+            
+            <div class="header-controls">
+                <div class="language-switch">
+                    <button onclick="toggleLanguage()" class="lang-btn">
+                        <i class="fas fa-globe"></i>
+                        <span id="current-lang">KO</span>
+                    </button>
+                </div>
+                
+                <div class="theme-switch">
+                    <button onclick="toggleTheme()" class="theme-btn">
+                        <i class="fas fa-moon" id="theme-icon"></i>
+                    </button>
+                </div>
+                
+                <div class="auth-section">
+                    <button id="login-btn" onclick="showLoginModal()" class="login-btn">
+                        <i class="fas fa-sign-in-alt"></i>
+                        <span data-i18n="login">로그인</span>
+                    </button>
+                    <div id="user-menu" class="user-menu hidden">
+                        <img id="user-avatar" src="" alt="User Avatar" class="user-avatar">
+                        <div class="user-dropdown">
+                            <button onclick="showAdminPanel()" data-i18n="admin_panel">관리자 패널</button>
+                            <button onclick="showSettings()" data-i18n="settings">설정</button>
+                            <button onclick="logout()" data-i18n="logout">로그아웃</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Layout -->
+    <div class="main-layout">
+        <!-- Left Sidebar -->
+        <nav class="sidebar">
+            <div class="sidebar-content">
+                <div class="profile-section">
+                    <div class="profile-image">
+                        <img id="profile-img" src="https://via.placeholder.com/120" alt="Profile Picture">
+                        <div class="status-indicator online"></div>
+                    </div>
+                    <h2 id="profile-name" data-i18n="profile_name">Dr. [Your Name]</h2>
+                    <p id="profile-title" data-i18n="profile_title">AI Researcher & Data Scientist</p>
+                    <div class="profile-stats">
+                        <div class="stat">
+                            <span class="stat-number" id="publications-count">0</span>
+                            <span class="stat-label" data-i18n="publications">Publications</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-number" id="citations-count">0</span>
+                            <span class="stat-label" data-i18n="citations">Citations</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-number" id="h-index">0</span>
+                            <span class="stat-label">H-Index</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="navigation">
+                    <ul class="nav-menu">
+                        <li class="nav-item active">
+                            <a href="#about" onclick="showSection('about')">
+                                <i class="fas fa-user"></i>
+                                <span data-i18n="about">About Me</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="#publications" onclick="showSection('publications')">
+                                <i class="fas fa-file-alt"></i>
+                                <span data-i18n="publications">Publications</span>
+                                <span class="nav-badge" id="pub-badge">0</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="#projects" onclick="showSection('projects')">
+                                <i class="fas fa-project-diagram"></i>
+                                <span data-i18n="projects">Projects</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="#awards" onclick="showSection('awards')">
+                                <i class="fas fa-trophy"></i>
+                                <span data-i18n="awards">Awards</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="#timeline" onclick="showSection('timeline')">
+                                <i class="fas fa-clock"></i>
+                                <span data-i18n="timeline">Timeline</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="#contact" onclick="showSection('contact')">
+                                <i class="fas fa-envelope"></i>
+                                <span data-i18n="contact">Contact</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="#feedback" onclick="showSection('feedback')">
+                                <i class="fas fa-comments"></i>
+                                <span data-i18n="feedback">Feedback</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="#collaboration" onclick="showSection('collaboration')">
+                                <i class="fas fa-handshake"></i>
+                                <span data-i18n="collaboration">Collaboration</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="social-links">
+                    <a href="#" class="social-link"><i class="fab fa-google-scholar"></i></a>
+                    <a href="#" class="social-link"><i class="fab fa-github"></i></a>
+                    <a href="#" class="social-link"><i class="fab fa-linkedin"></i></a>
+                    <a href="#" class="social-link"><i class="fab fa-twitter"></i></a>
+                    <a href="#" class="social-link"><i class="fab fa-orcid"></i></a>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main class="main-content" id="main-content">
+            <!-- Content sections will be dynamically loaded here -->
+        </main>
+
+        <!-- AI Assistant Panel -->
+        <aside class="ai-assistant">
+            <div class="ai-header">
+                <div class="ai-title">
+                    <i class="fas fa-robot"></i>
+                    <span data-i18n="ai_assistant">AI Assistant</span>
+                </div>
+                <button class="ai-toggle" onclick="toggleAIPanel()">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+            
+            <div class="ai-content">
+                <div class="ai-model-selector">
+                    <select id="ai-model">
+                        <option value="gpt-4">GPT-4</option>
+                        <option value="claude-3">Claude-3</option>
+                        <option value="gemini-pro">Gemini Pro</option>
+                    </select>
+                </div>
+                
+                <div id="ai-chat" class="ai-chat">
+                    <div class="ai-welcome">
+                        <p data-i18n="ai_welcome">안녕하세요! 연구 관련 질문이나 페이지 내용에 대해 문의해주세요.</p>
+                    </div>
+                </div>
+                
+                <div class="ai-input-area">
+                    <input type="text" id="ai-input" placeholder="Ask about research..." disabled>
+                    <button id="ai-send" onclick="sendAIMessage()" disabled>
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+                
+                <div class="ai-api-setup">
+                    <button onclick="showAPISetup()" class="api-setup-btn">
+                        <i class="fas fa-key"></i>
+                        <span data-i18n="setup_api">Setup API Keys</span>
+                    </button>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <!-- Mobile Menu Toggle -->
+    <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <!-- Modal Container -->
+    <div id="modal-container"></div>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="toast">
+        <i class="fas fa-check-circle"></i>
+        <span id="toast-message"></span>
+    </div>
+
+    <!-- Scripts -->
+    <script src="firebase-config.js"></script>
+    <script src="auth.js"></script>
+    <script src="ai-assistant.js"></script>
+    <script src="publications.js"></script>
+    <script src="contact.js"></script>
+    <script src="analytics.js"></script>
+    <script src="script.js"></script>
+</body>
+</html> 
