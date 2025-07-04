@@ -23,53 +23,37 @@ function hasValidFirebaseConfig() {
 
 // Initialize Firebase
 function initializeFirebase() {
-    return new Promise((resolve) => {
-        // Firebase 초기화가 5초 이상 걸리면 오프라인 모드로 강제 전환
-        const initTimeout = setTimeout(() => {
-            console.warn('Firebase initialization timed out. Forcing mock mode.');
+    try {
+        if (hasValidFirebaseConfig() && typeof firebase !== 'undefined') {
+            console.log('Initializing Firebase with real config...');
+            
+            // Initialize Firebase app
+            app = firebase.initializeApp(firebaseConfig);
+            auth = firebase.auth();
+            db = firebase.firestore();
+            
+            isFirebaseEnabled = true;
+            isMockMode = false;
+            
+            console.log('Firebase initialized successfully');
+            
+            // Set up authentication state observer
+            setupAuthStateObserver();
+            
+            // Configure Firestore settings
+            configureFirestore();
+            
+            return true;
+        } else {
+            console.log('Firebase not available, switching to mock mode');
             initializeMockMode();
-            resolve(false); // 초기화 실패로 간주
-        }, 5000);
-
-        try {
-            if (hasValidFirebaseConfig() && typeof firebase !== 'undefined') {
-                console.log('Initializing Firebase with real config...');
-                
-                app = firebase.initializeApp(firebaseConfig);
-                auth = firebase.auth();
-                db = firebase.firestore();
-                
-                isFirebaseEnabled = true;
-                isMockMode = false;
-                
-                console.log('Firebase initialized successfully');
-                
-                // Firestore 설정
-                configureFirestore().then(() => {
-                    // 인증 상태 감시자 설정
-                    setupAuthStateObserver();
-                    clearTimeout(initTimeout);
-                    resolve(true); // 초기화 성공
-                }).catch(err => {
-                    console.error("Firestore configuration failed", err);
-                    clearTimeout(initTimeout);
-                    initializeMockMode();
-                    resolve(false);
-                });
-
-            } else {
-                console.log('Firebase SDK not available or config invalid, switching to mock mode');
-                clearTimeout(initTimeout);
-                initializeMockMode();
-                resolve(false);
-            }
-        } catch (error) {
-            console.error('Firebase initialization failed, switching to mock mode:', error);
-            clearTimeout(initTimeout);
-            initializeMockMode();
-            resolve(false);
+            return false;
         }
-    });
+    } catch (error) {
+        console.warn('Firebase initialization failed, switching to mock mode:', error);
+        initializeMockMode();
+        return false;
+    }
 }
 
 // Mock mode initialization
@@ -112,60 +96,63 @@ function setupAuthStateObserver() {
 
 // Configure Firestore settings
 function configureFirestore() {
-    if (!isFirebaseEnabled || !db) return Promise.resolve();
+    if (!isFirebaseEnabled || !db) return;
     
-    // Enable multi-tab offline persistence
-    return db.enablePersistence({ synchronizeTabs: true })
-        .then(() => {
-            console.log('Firestore persistence with tab synchronization enabled.');
-        })
-        .catch((err) => {
+    try {
+        // Enable offline persistence
+        db.enablePersistence().catch((err) => {
             if (err.code === 'failed-precondition') {
-                console.warn('Persistence failed: Another tab has exclusive lock. Synchronization will be attempted.');
+                console.warn('Multiple tabs open, persistence can only be enabled in one tab at a time.');
             } else if (err.code === 'unimplemented') {
-                console.warn('Persistence is not supported in this browser.');
-            } else {
-                console.error("Enable persistence failed:", err);
+                console.warn('The current browser doesn\'t support persistence.');
             }
         });
+    } catch (error) {
+        console.warn('Error setting up Firestore:', error);
+    }
 }
 
 // Authentication functions
 async function loginWithGoogle() {
-    console.log('Attempting real Google login...');
-
-    if (!hasValidFirebaseConfig() || typeof firebase === 'undefined') {
-        showToast('Firebase is not configured. Cannot perform login.', 'error');
-        return;
+    console.log('Google login attempt...');
+    
+    if (isMockMode) {
+        return mockLogin('Google');
     }
-
+    
+    if (!isFirebaseEnabled || !auth) {
+        showToast('Firebase not configured. Using mock login.', 'warning');
+        return mockLogin('Google');
+    }
+    
     try {
         const provider = new firebase.auth.GoogleAuthProvider();
         provider.addScope('profile');
         provider.addScope('email');
         
         const result = await auth.signInWithPopup(provider);
-        // handleUserSignedIn will be called by the onAuthStateChanged observer
-        console.log('Google login successful, auth state change will handle the rest.');
+        console.log('Google login successful:', result.user.email);
+        showToast('Google 로그인 성공!', 'success');
         closeModal('login-modal');
         return result;
         
     } catch (error) {
         console.error('Google login error:', error);
-        if (error.code === 'auth/popup-closed-by-user') {
-            showToast('로그인 팝업이 닫혔습니다.', 'info');
-        } else {
-            showToast('Google 로그인에 실패했습니다. 다시 시도해주세요.', 'error');
-        }
+        showToast('Google 로그인 실패: ' + error.message, 'error');
+        throw error;
     }
 }
 
 async function loginWithGitHub() {
-    console.log('Attempting real GitHub login...');
-
-    if (!hasValidFirebaseConfig() || typeof firebase === 'undefined') {
-        showToast('Firebase is not configured. Cannot perform login.', 'error');
-        return;
+    console.log('GitHub login attempt...');
+    
+    if (isMockMode) {
+        return mockLogin('GitHub');
+    }
+    
+    if (!isFirebaseEnabled || !auth) {
+        showToast('Firebase not configured. Using mock login.', 'warning');
+        return mockLogin('GitHub');
     }
     
     try {
@@ -174,18 +161,15 @@ async function loginWithGitHub() {
         provider.addScope('read:user');
         
         const result = await auth.signInWithPopup(provider);
-        // handleUserSignedIn will be called by the onAuthStateChanged observer
-        console.log('GitHub login successful, auth state change will handle the rest.');
+        console.log('GitHub login successful:', result.user.email);
+        showToast('GitHub 로그인 성공!', 'success');
         closeModal('login-modal');
         return result;
         
     } catch (error) {
         console.error('GitHub login error:', error);
-        if (error.code === 'auth/popup-closed-by-user') {
-            showToast('로그인 팝업이 닫혔습니다.', 'info');
-        } else {
-            showToast('GitHub 로그인에 실패했습니다. 다시 시도해주세요.', 'error');
-        }
+        showToast('GitHub 로그인 실패: ' + error.message, 'error');
+        throw error;
     }
 }
 
@@ -273,25 +257,21 @@ async function logout() {
 
 // Mock authentication functions
 function mockLogin(provider = 'Google') {
-    console.warn(`DEPRECATED: mockLogin called with provider: ${provider}. This should not happen during user login.`);
-    
     const mockUser = {
-        uid: 'mock_user_12345',
-        displayName: 'Demo User (Offline)',
+        uid: 'mock-user-123',
         email: 'demo@example.com',
-        photoURL: 'https://via.placeholder.com/150/6c757d/ffffff?text=M'
+        displayName: 'Demo User',
+        photoURL: 'https://via.placeholder.com/40?text=DU'
     };
-
-    // Mock 사용자는 절대 관리자가 될 수 없음
-    AppState.user = mockUser;
-    AppState.isLoggedIn = true;
-    AppState.isAdmin = false; // 명시적으로 false 설정
-
-    updateUIForSignedInUser(mockUser);
-    updateAdminUI();
-
-    showToast(`Displaying offline demo content.`, 'info');
+    
+    window.mockAuth.currentUser = mockUser;
+    window.mockAuth.isSignedIn = true;
+    
+    handleUserSignedIn(mockUser);
+    showToast(`Mock ${provider} 로그인 성공! (데모 모드)`, 'success');
     closeModal('login-modal');
+    
+    return Promise.resolve({ user: mockUser });
 }
 
 function mockLogout() {
@@ -306,36 +286,42 @@ function mockLogout() {
 
 // User state handlers
 async function handleUserSignedIn(user) {
-    if (!user) return;
+    console.log('Handling user signed in:', user.email || user.displayName);
     
-    AppState.isLoggedIn = true;
-    AppState.user = {
-        uid: user.uid,
-        displayName: user.displayName,
-        email: user.email,
-        photoURL: user.photoURL
-    };
-    
-    // 명확하게 이메일로 관리자 여부 확인
-    const isAdmin = user.email === 'cjmin2925@gmail.com';
-    AppState.isAdmin = isAdmin;
-    
-    console.log(`User signed in: ${user.email}, Is Admin: ${isAdmin}`);
-
-    // UI 업데이트
+    // Update UI
     updateUIForSignedInUser(user);
-    updateAdminUI();
-
-    // Firestore에 사용자 데이터 로드/생성 (온라인일 경우에만)
-    if (isFirebaseEnabled && db && !db.isOffline) {
-        try {
-            await loadUserData(user.uid);
-            if (isAdmin) {
-                await ensureAdminDocument(user.uid);
-            }
-        } catch (error) {
-            console.warn("Could not load/create user document, possibly offline.", error);
-        }
+    
+    // Check admin status
+    const isAdmin = await checkAdminStatus(user.uid);
+    
+    // Update app state
+    if (typeof AppState !== 'undefined') {
+        AppState.user = {
+            uid: user.uid,
+            email: user.email,
+            displayName: user.displayName,
+            photoURL: user.photoURL
+        };
+        AppState.isAdmin = isAdmin;
+    }
+    
+    // Save admin status to localStorage for persistence
+    localStorage.setItem('is_admin', isAdmin.toString());
+    
+    // Update admin UI visibility
+    if (typeof updateAdminUI === 'function') {
+        updateAdminUI();
+    }
+    
+    // Show welcome message
+    const welcomeMsg = isAdmin ? 
+        `관리자로 로그인했습니다, ${user.displayName || user.email}!` : 
+        `환영합니다, ${user.displayName || user.email}!`;
+    showToast(welcomeMsg, 'success');
+    
+    // Load user data (only if Firebase is enabled)
+    if (isFirebaseEnabled) {
+        await loadUserData(user.uid);
     }
 }
 
@@ -401,36 +387,50 @@ function updateUIForSignedOutUser() {
 }
 
 async function checkAdminStatus(userId) {
-    // 0. 하드코딩된 관리자 이메일 확인 (가장 먼저)
-    const user = auth.currentUser;
-    if (user && user.email === 'cjmin2925@gmail.com') {
-        console.log('Admin user detected by email.');
-        // 온라인 상태라면 DB에 상태를 기록해준다.
-        if (isFirebaseEnabled && !db.isOffline) {
-            ensureAdminDocument(user.uid).catch(err => console.warn("Could not ensure admin document online:", err));
-        }
-        return true;
-    }
-
-    // 1. Firebase 비활성화 시 mock 데이터 확인
-    if (!isFirebaseEnabled || !db) {
-        return localStorage.getItem('mock_is_admin') === 'true';
-    }
-
-    // 2. Firestore DB 확인 (온라인일 경우)
     try {
-        const adminDoc = await db.collection('admins').doc(userId).get();
-        if (adminDoc.exists && adminDoc.data().isAdmin) {
-            console.log('User is an administrator (from Firestore).');
+        if (isMockMode) {
+            // In mock mode, check if user email matches admin email
+            const currentUser = window.mockAuth?.currentUser;
+            const isAdmin = currentUser && currentUser.email === 'cjmin2925@gmail.com';
+            
+            if (isAdmin) {
+                document.body.classList.add('admin-mode');
+                console.log('Admin access granted (mock mode)');
+            }
+            
+            return isAdmin;
+        }
+        
+        if (!isFirebaseEnabled || !db || !auth.currentUser) {
+            return false;
+        }
+        
+        // Check by email first (primary method)
+        const currentUser = auth.currentUser;
+        if (currentUser.email === 'cjmin2925@gmail.com') {
+            document.body.classList.add('admin-mode');
+            console.log('Admin access granted by email');
+            
+            // Ensure admin document exists
+            await ensureAdminDocument(userId);
             return true;
         }
+        
+        // Check admins collection as backup
+        const userDoc = await db.collection('admins').doc(userId).get();
+        const isAdmin = userDoc.exists;
+        
+        if (isAdmin) {
+            document.body.classList.add('admin-mode');
+            console.log('Admin access granted by document');
+        }
+        
+        return isAdmin;
+        
     } catch (error) {
-        console.error('Error checking admin status from Firestore:', error);
-        // 에러 발생 시 (주로 오프라인), 이메일 체크가 이미 위에서 수행되었으므로 여기서 false를 반환해도 안전.
+        console.error('Error checking admin status:', error);
+        return false;
     }
-
-    console.log('User is not an administrator.');
-    return false;
 }
 
 async function ensureAdminDocument(userId) {

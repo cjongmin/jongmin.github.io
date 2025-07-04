@@ -399,46 +399,51 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('App initialization complete');
 });
 
-async function initializeApp() {
+function initializeApp() {
     console.log('Initializing application...');
-
-    const loadingScreen = document.getElementById('loading-screen');
-
-    // 1. 로컬 데이터 우선 로드 및 UI 렌더링
-    console.log('Step 1: Loading local data first...');
+    
+    // 기본 설정 로드
     loadPreferences();
+    
+    // 저장된 프로필 데이터 로드
     loadSavedProfileData();
-    loadAllData(); // This will now use mock/local data if Firebase isn't ready
-    showSection('about');
+    
+    // 모든 데이터 로드
+    loadAllData();
+    
+    // Firebase 상태 감시 (사용 가능한 경우)
+    if (typeof auth !== 'undefined' && auth) {
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                console.log('User signed in:', user.email);
+                
+                // 관리자 확인
+                if (user.email === 'cjmin2925@gmail.com') {
+                    AppState.isAdmin = true;
+                    console.log('Admin user detected');
+                } else {
+                    AppState.isAdmin = false;
+                }
+                
+                // 관리자 UI 업데이트
+                updateAdminUI();
+                
+            } else {
+                console.log('User signed out');
+                AppState.isAdmin = false;
+                updateAdminUI();
+            }
+        });
+    } else {
+        console.log('Firebase auth not available, running in offline mode');
+    }
+    
+    // 네비게이션 및 이벤트 리스너 설정
     setupNavigationEventListeners();
     setupHeaderEventListeners();
     setupMobileEventListeners();
-    console.log('Initial UI rendered with local data.');
-
-    // 2. 로딩 화면 즉시 숨기기
-    if (loadingScreen) {
-        setTimeout(() => {
-            loadingScreen.style.opacity = '0';
-            setTimeout(() => {
-                loadingScreen.style.display = 'none';
-            }, 500);
-        }, 100); // Short delay to prevent flash
-    }
-    console.log('Step 2: Loading screen hidden.');
-
-    // 3. 백그라운드에서 Firebase 초기화 및 동기화
-    console.log('Step 3: Initializing Firebase in the background...');
-    const firebaseReady = await initializeFirebase();
-
-    if (firebaseReady) {
-        console.log('Firebase is ready. Data will be synchronized.');
-        // Firebase가 준비되면, 데이터를 다시 로드하여 최신 정보로 업데이트 할 수 있습니다.
-        // 예를 들어, loadAllData(); 를 다시 호출하여 Firebase에서 데이터를 가져올 수 있습니다.
-    } else {
-        console.warn('Firebase could not be initialized. App is running in offline/mock mode.');
-    }
-
-    console.log(`Application initialized. Firebase Ready: ${firebaseReady}`);
+    
+    console.log('Application initialized successfully');
 }
 
 function loadPreferences() {
@@ -813,29 +818,27 @@ function renderPublications() {
     }
 
     const publicationsHTML = AppState.publications.map(pub => {
-        // Correctly access nested link properties
-        const pdfLink = pub.links?.pdf ? `<a href="${pub.links.pdf}" target="_blank" class="link-btn pdf"><i class="fas fa-file-pdf"></i> PDF</a>` : '';
-        const codeLink = pub.links?.code ? `<a href="${pub.links.code}" target="_blank" class="link-btn code"><i class="fas fa-code"></i> Code</a>` : '';
-        const projectLink = pub.links?.project ? `<a href="${pub.links.project}" target="_blank" class="link-btn project"><i class="fas fa-globe"></i> Project</a>` : '';
+        const links = [];
+        if (pub.pdf) links.push(`<a href="${pub.pdf}" target="_blank" class="link-btn pdf">PDF</a>`);
+        if (pub.code) links.push(`<a href="${pub.code}" target="_blank" class="link-btn code">Code</a>`);
+        if (pub.project) links.push(`<a href="${pub.project}" target="_blank" class="link-btn project">Project</a>`);
 
         return `
             <div class="publication-card">
                 <div class="publication-year">${pub.year}</div>
                 <div class="publication-content">
                     <h3 class="publication-title">${pub.title}</h3>
-                    <p class="publication-authors">${pub.authors}</p>
-                    <p class="publication-venue">${pub.venue}</p>
+                    <div class="publication-authors">${pub.authors}</div>
+                    <div class="publication-venue">${pub.venue}</div>
                     <div class="publication-links">
-                        ${pdfLink}
-                        ${codeLink}
-                        ${projectLink}
+                        ${links.join('')}
                     </div>
                 </div>
                 <div class="admin-controls admin-only hidden">
-                    <button class="btn-small btn-primary" onclick="showEditPublicationModal('${pub.id}')" title="Edit Publication">
+                    <button class="btn-small btn-primary" onclick="showEditPublicationModal('${pub.id}')">
                         <i class="fas fa-edit"></i>
                     </button>
-                    <button class="btn-small btn-danger" onclick="deletePublication('${pub.id}')" title="Delete Publication">
+                    <button class="btn-small btn-danger" onclick="deletePublication('${pub.id}')">
                         <i class="fas fa-trash"></i>
                     </button>
                 </div>
@@ -844,37 +847,24 @@ function renderPublications() {
     }).join('');
 
     publicationsList.innerHTML = publicationsHTML;
-    updateAdminUI(); // Ensure admin controls are visible if logged in as admin
+    updateAdminUI();
 }
 
 function loadProjects() {
-    // Sample projects data using placeholder images for reliability
+    // Sample project data
     const sampleProjects = [
         {
-            id: 'proj1',
-            title: 'AI-Powered Research Assistant',
-            description: 'An intelligent system for helping researchers discover and analyze academic papers.',
-            image: 'https://via.placeholder.com/400x250/007bff/ffffff?text=Project+1',
-            status: 'Completed',
-            technologies: ['Python', 'TensorFlow', 'React', 'Firebase'],
-            links: {
-                github: '#',
-                demo: '#'
-            }
-        },
-        {
-            id: 'proj2',
-            title: 'Data Analytics Platform',
-            description: 'A comprehensive platform for analyzing and visualizing research data with advanced machine learning capabilities.',
-            image: 'https://via.placeholder.com/400x250/28a745/ffffff?text=Project+2',
-            status: 'In Progress',
-            technologies: ['Python', 'Pandas', 'D3.js', 'PostgreSQL'],
-            links: {
-                github: '#',
-                demo: '#'
-            }
+            id: 1,
+            title: "AI-Powered Research Assistant",
+            description: "An intelligent system for helping researchers discover and analyze academic papers.",
+            technologies: ["Python", "TensorFlow", "React", "Firebase"],
+            status: "Active",
+            image: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDMwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIzMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0xMjAgODBMMTUwIDExMEwxODAgODBNMTIwIDEyMEgxODAiIHN0cm9rZT0iIzlDQTNBRiIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KPHN2Zz4K",
+            github: "#",
+            demo: "#"
         }
     ];
+    
     AppState.projects = sampleProjects;
     renderProjects();
 }
