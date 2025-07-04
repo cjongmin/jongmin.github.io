@@ -7,7 +7,8 @@ const AppState = {
     user: null,
     publications: [],
     projects: [],
-    awards: []
+    awards: [],
+    timeline: []
 };
 
 // Internationalization
@@ -274,6 +275,144 @@ const sectionTemplates = {
         <div id="timeline-list" class="timeline-list">
             <!-- Timeline events will be loaded here with admin controls -->
         </div>
+    `,
+    
+    contact: `
+        <div class="section-header">
+            <h1 data-i18n="contact">Contact</h1>
+        </div>
+        
+        <div class="contact-content">
+            <div class="contact-info">
+                <div class="contact-item">
+                    <i class="fas fa-envelope"></i>
+                    <span>jongmin@mmai.io</span>
+                </div>
+                <div class="contact-item">
+                    <i class="fas fa-phone"></i>
+                    <span>+82 10-2925-6477</span>
+                </div>
+                <div class="contact-item">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span>KAIST, 291 Daehak-ro, Yuseong-gu, Daejeon, Republic of Korea, 34141</span>
+                </div>
+            </div>
+            
+            <form id="contact-form" class="contact-form" onsubmit="handleContactForm(event)">
+                <div class="form-group">
+                    <label for="contact-name" data-i18n="name">Name</label>
+                    <input type="text" id="contact-name" required>
+                </div>
+                <div class="form-group">
+                    <label for="contact-email" data-i18n="email">Email</label>
+                    <input type="email" id="contact-email" required>
+                </div>
+                <div class="form-group">
+                    <label for="contact-subject" data-i18n="subject">Subject</label>
+                    <input type="text" id="contact-subject" required>
+                </div>
+                <div class="form-group">
+                    <label for="contact-message" data-i18n="message">Message</label>
+                    <textarea id="contact-message" rows="5" required></textarea>
+                </div>
+                <button type="submit" class="submit-btn">
+                    <i class="fas fa-paper-plane"></i>
+                    <span data-i18n="send_message">Send Message</span>
+                </button>
+            </form>
+        </div>
+    `,
+    
+    feedback: `
+        <div class="section-header">
+            <h1 data-i18n="feedback">Visitor Feedback</h1>
+        </div>
+        
+        <div id="feedback-container">
+            <form id="feedback-form" class="feedback-form" onsubmit="handleFeedbackForm(event)">
+                <div class="form-group">
+                    <label for="feedback-rating" data-i18n="rating">Rating</label>
+                    <div class="rating-stars">
+                        <i class="fas fa-star" data-rating="1" onclick="setRating(1)"></i>
+                        <i class="fas fa-star" data-rating="2" onclick="setRating(2)"></i>
+                        <i class="fas fa-star" data-rating="3" onclick="setRating(3)"></i>
+                        <i class="fas fa-star" data-rating="4" onclick="setRating(4)"></i>
+                        <i class="fas fa-star" data-rating="5" onclick="setRating(5)"></i>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="feedback-comment" data-i18n="comment">Comment</label>
+                    <textarea id="feedback-comment" rows="4" placeholder="Share your thoughts about my research..."></textarea>
+                </div>
+                <button type="submit" class="submit-btn">
+                    <i class="fas fa-comment"></i>
+                    <span data-i18n="submit_feedback">Submit Feedback</span>
+                </button>
+            </form>
+            
+            <div id="feedback-list" class="feedback-list">
+                <!-- Feedback will be loaded here -->
+            </div>
+        </div>
+    `,
+    
+    collaboration: `
+        <div class="section-header">
+            <h1 data-i18n="collaboration">Collaboration</h1>
+        </div>
+        
+        <div class="collaboration-content">
+            <div class="collaboration-intro">
+                <p>I'm always interested in collaborating with fellow researchers, industry partners, and students. Here are some areas where I'm looking for collaboration:</p>
+            </div>
+            
+            <div class="collaboration-areas">
+                <div class="collaboration-card">
+                    <i class="fas fa-brain"></i>
+                    <h3>Research Collaboration</h3>
+                    <p>Joint research projects in AI, ML, and NLP</p>
+                </div>
+                <div class="collaboration-card">
+                    <i class="fas fa-industry"></i>
+                    <h3>Industry Partnership</h3>
+                    <p>Applied research and technology transfer</p>
+                </div>
+                <div class="collaboration-card">
+                    <i class="fas fa-graduation-cap"></i>
+                    <h3>Student Mentoring</h3>
+                    <p>PhD and Master's student supervision</p>
+                </div>
+            </div>
+            
+            <div class="collaboration-form">
+                <h3>Collaboration Proposal</h3>
+                <form id="collaboration-form" onsubmit="handleCollaborationForm(event)">
+                    <div class="form-group">
+                        <label for="collab-name">Name</label>
+                        <input type="text" id="collab-name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="collab-email">Email</label>
+                        <input type="email" id="collab-email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="collab-type">Collaboration Type</label>
+                        <select id="collab-type" required>
+                            <option value="">Select Type</option>
+                            <option value="research">Research Collaboration</option>
+                            <option value="industry">Industry Partnership</option>
+                            <option value="mentoring">Student Mentoring</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="collab-proposal">Proposal Description</label>
+                        <textarea id="collab-proposal" rows="5" required></textarea>
+                    </div>
+                    <button type="submit" class="submit-btn">Send Proposal</button>
+                </form>
+            </div>
+        </div>
     `
 };
 
@@ -366,12 +505,16 @@ function loadSavedProfileData() {
             
             const profileName = document.getElementById('profile-name');
             const profileTitle = document.getElementById('profile-title');
+            const aboutText = document.getElementById('about-text');
             
             if (profileName && profileData.name) {
                 profileName.textContent = profileData.name;
             }
             if (profileTitle && profileData.title) {
                 profileTitle.textContent = profileData.title;
+            }
+            if (aboutText && profileData.bio) {
+                aboutText.innerHTML = profileData.bio.split('\n').map(p => `<p>${p}</p>`).join('');
             }
             
             console.log('Profile data loaded from localStorage');
@@ -385,6 +528,14 @@ function loadSavedProfileData() {
                 profileImg.src = savedPhoto;
                 console.log('Profile photo loaded from localStorage');
             }
+        }
+        
+        // Check for saved admin status (for page refresh persistence)
+        const savedAdminStatus = localStorage.getItem('is_admin');
+        if (savedAdminStatus === 'true') {
+            AppState.isAdmin = true;
+            document.body.classList.add('admin-mode');
+            updateAdminUI();
         }
         
     } catch (error) {
@@ -408,11 +559,11 @@ function showSection(sectionName) {
     if (mainContent && sectionTemplates[sectionName]) {
         mainContent.innerHTML = sectionTemplates[sectionName];
         
+        // Load data for the new section
+        loadSectionData(sectionName);
+        
         // Update language
         updateLanguage();
-        
-        // Load section-specific data
-        loadSectionData(sectionName);
         
         // Update app state
         AppState.currentSection = sectionName;
@@ -423,19 +574,33 @@ function showSection(sectionName) {
 }
 
 function loadSectionData(sectionName) {
-    switch(sectionName) {
+    switch (sectionName) {
+        case 'about':
+            // About data is mostly static text
+            break;
         case 'publications':
-            loadPublications();
+            renderPublications();
             break;
         case 'projects':
-            loadProjects();
+            renderProjects();
             break;
         case 'awards':
-            loadAwards();
+            renderAwards();
+            break;
+        case 'timeline':
+            renderTimeline();
+            break;
+        case 'contact':
+            // No specific data to load, form is static
             break;
         case 'feedback':
             loadFeedback();
             break;
+        case 'collaboration':
+            // No specific data to load, form is static
+            break;
+        default:
+            console.warn(`No data loading logic for section: ${sectionName}`);
     }
 }
 
@@ -609,7 +774,8 @@ function loadAllData() {
     loadPublications();
     loadProjects();
     loadAwards();
-    updateStats();
+    loadTimeline();
+    loadFeedback();
 }
 
 function loadPublications() {
@@ -1017,12 +1183,143 @@ function filterPublications() {
 function renderFilteredPublications(publications) {
     const publicationsList = document.getElementById('publications-list');
     if (!publicationsList) return;
-    
-    // Temporarily update the publications for rendering
-    const originalPublications = AppState.publications;
-    AppState.publications = publications;
+
+    const publicationsHTML = publications.map(pub => {
+        const links = [];
+        if (pub.pdf) links.push(`<a href="${pub.pdf}" target="_blank" class="link-btn pdf">PDF</a>`);
+        if (pub.code) links.push(`<a href="${pub.code}" target="_blank" class="link-btn code">Code</a>`);
+        if (pub.project) links.push(`<a href="${pub.project}" target="_blank" class="link-btn project">Project</a>`);
+
+        return `
+            <div class="publication-card">
+                <div class="publication-year">${pub.year}</div>
+                <div class="publication-content">
+                    <h3 class="publication-title">${pub.title}</h3>
+                    <div class="publication-authors">${pub.authors}</div>
+                    <div class="publication-venue">${pub.venue}</div>
+                    <div class="publication-links">
+                        ${links.join('')}
+                    </div>
+                </div>
+                <div class="admin-controls admin-only hidden">
+                    <button class="btn-small btn-primary" onclick="showEditPublicationModal('${pub.id}')">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn-small btn-danger" onclick="deletePublication('${pub.id}')">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+        `;
+    }).join('');
+    publicationsList.innerHTML = publicationsHTML;
+    updateAdminUI();
+}
+
+function showAddPublicationModal() {
+    if (!AppState.isAdmin) return;
+    showPublicationModal(null);
+}
+
+function showEditPublicationModal(pubId) {
+    if (!AppState.isAdmin) return;
+    const publication = AppState.publications.find(p => p.id === pubId);
+    if (publication) {
+        showPublicationModal(publication);
+    }
+}
+
+function showPublicationModal(pub) {
+    const modalId = 'publication-modal';
+    const existingModal = document.getElementById(modalId);
+    if (existingModal) existingModal.remove();
+
+    const title = pub ? 'Edit Publication' : 'Add Publication';
+    const modalHTML = `
+        <div id="${modalId}" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>${title}</h2>
+                    <button class="modal-close" onclick="closeModal('${modalId}')"><i class="fas fa-times"></i></button>
+                </div>
+                <div class="modal-body">
+                    <form id="publication-form" onsubmit="handleSavePublication(event, '${pub?.id || ''}')">
+                        <div class="form-group">
+                            <label>Title</label>
+                            <input type="text" id="pub-title" value="${pub?.title || ''}" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Authors</label>
+                            <input type="text" id="pub-authors" value="${pub?.authors || ''}" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Venue</label>
+                            <input type="text" id="pub-venue" value="${pub?.venue || ''}" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Year</label>
+                            <input type="number" id="pub-year" value="${pub?.year || new Date().getFullYear()}" required>
+                        </div>
+                        <div class="form-group">
+                            <label>PDF Link</label>
+                            <input type="url" id="pub-pdf" value="${pub?.pdf || ''}">
+                        </div>
+                        <div class="form-group">
+                            <label>Code Link</label>
+                            <input type="url" id="pub-code" value="${pub?.code || ''}">
+                        </div>
+                        <div class="form-group">
+                            <label>Project Link</label>
+                            <input type="url" id="pub-project" value="${pub?.project || ''}">
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">Save</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    showModal(modalId);
+}
+
+function handleSavePublication(event, pubId) {
+    event.preventDefault();
+    if (!AppState.isAdmin) return;
+
+    const publication = {
+        id: pubId || `pub_${new Date().getTime()}`,
+        title: document.getElementById('pub-title').value,
+        authors: document.getElementById('pub-authors').value,
+        venue: document.getElementById('pub-venue').value,
+        year: parseInt(document.getElementById('pub-year').value, 10),
+        pdf: document.getElementById('pub-pdf').value,
+        code: document.getElementById('pub-code').value,
+        project: document.getElementById('pub-project').value,
+    };
+
+    if (pubId) {
+        // Edit existing
+        const index = AppState.publications.findIndex(p => p.id === pubId);
+        AppState.publications[index] = publication;
+    } else {
+        // Add new
+        AppState.publications.unshift(publication);
+    }
+
     renderPublications();
-    AppState.publications = originalPublications;
+    closeModal('publication-modal');
+    showToast('Publication saved successfully.');
+}
+
+function deletePublication(pubId) {
+    if (!AppState.isAdmin) return;
+    if (confirm('Are you sure you want to delete this publication?')) {
+        AppState.publications = AppState.publications.filter(p => p.id !== pubId);
+        renderPublications();
+        showToast('Publication deleted.');
+    }
 }
 
 // Navigation event listeners
@@ -1343,10 +1640,10 @@ function handleProfileEdit(event) {
     if (profileName) profileName.textContent = name;
     if (profileTitle) profileTitle.textContent = title;
     if (aboutText && bio) {
-        aboutText.innerHTML = bio.split('\n').map(p => `<p>${p}</p>`).join('');
+        aboutText.innerHTML = bio.split('\\n').map(p => `<p>${p}</p>`).join('');
     }
     
-    // Save to localStorage (for demo purposes)
+    // Save to localStorage
     localStorage.setItem('profile_data', JSON.stringify({
         name: name,
         title: title,
@@ -1454,20 +1751,104 @@ function deleteProject(projectId) {
     if (!AppState.isAdmin) return;
     
     if (confirm('이 프로젝트를 삭제하시겠습니까?')) {
-        showToast('프로젝트 삭제 기능이 곧 제공됩니다.', 'info');
+        AppState.projects = AppState.projects.filter(p => p.id !== projectId);
+        renderProjects();
+        showToast('Project deleted.');
     }
-}
-
-function showAddPublicationModal() {
-    if (!AppState.isAdmin) return;
-    
-    showToast('논문 추가 기능이 곧 제공됩니다.', 'info');
 }
 
 function showAddProjectModal() {
     if (!AppState.isAdmin) return;
-    
-    showToast('프로젝트 추가 기능이 곧 제공됩니다.', 'info');
+    showProjectModal(null);
+}
+
+function editProject(projectId) {
+    if (!AppState.isAdmin) return;
+    const project = AppState.projects.find(p => p.id === projectId);
+    if (project) {
+        showProjectModal(project);
+    }
+}
+
+function showProjectModal(project) {
+    const modalId = 'project-modal';
+    const existingModal = document.getElementById(modalId);
+    if (existingModal) existingModal.remove();
+
+    const title = project ? 'Edit Project' : 'Add Project';
+    const modalHTML = `
+        <div id="${modalId}" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>${title}</h2>
+                    <button class="modal-close" onclick="closeModal('${modalId}')"><i class="fas fa-times"></i></button>
+                </div>
+                <div class="modal-body">
+                    <form id="project-form" onsubmit="handleSaveProject(event, '${project?.id || ''}')">
+                        <div class="form-group">
+                            <label>Title</label>
+                            <input type="text" id="project-title" value="${project?.title || ''}" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Description</label>
+                            <textarea id="project-description" rows="3">${project?.description || ''}</textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Technologies (comma-separated)</label>
+                            <input type="text" id="project-tech" value="${project?.technologies.join(', ') || ''}">
+                        </div>
+                        <div class="form-group">
+                            <label>Icon (Font Awesome)</label>
+                            <input type="text" id="project-icon" value="${project?.icon || 'project-diagram'}">
+                        </div>
+                        <div class="form-group">
+                            <label>GitHub Link</label>
+                            <input type="url" id="project-github" value="${project?.links?.github || ''}">
+                        </div>
+                        <div class="form-group">
+                            <label>Demo Link</label>
+                            <input type="url" id="project-demo" value="${project?.links?.demo || ''}">
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">Save</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    showModal(modalId);
+}
+
+function handleSaveProject(event, projectId) {
+    event.preventDefault();
+    if (!AppState.isAdmin) return;
+
+    const project = {
+        id: projectId || `proj_${new Date().getTime()}`,
+        title: document.getElementById('project-title').value,
+        description: document.getElementById('project-description').value,
+        technologies: document.getElementById('project-tech').value.split(',').map(t => t.trim()),
+        icon: document.getElementById('project-icon').value,
+        links: {
+            github: document.getElementById('project-github').value,
+            demo: document.getElementById('project-demo').value,
+        }
+    };
+
+    if (projectId) {
+        // Edit existing
+        const index = AppState.projects.findIndex(p => p.id === projectId);
+        AppState.projects[index] = project;
+    } else {
+        // Add new
+        AppState.projects.unshift(project);
+    }
+
+    renderProjects();
+    closeModal('project-modal');
+    showToast('Project saved successfully.');
 }
 
 function showAddAwardModal() {
@@ -1479,7 +1860,7 @@ function showAddAwardModal() {
 function showAddTimelineModal() {
     if (!AppState.isAdmin) return;
     
-    showToast('타임라인 이벤트 추가 기능이 곧 제공됩니다.', 'info');
+    showToast('타임라인 추가 기능이 곧 제공됩니다.', 'info');
 }
 
 // Admin UI visibility control
@@ -1509,7 +1890,10 @@ function updateAdminUI() {
 // Add award management functions
 function editAward(awardId) {
     if (!AppState.isAdmin) return;
-    showToast('수상 내역 편집 기능이 곧 제공됩니다.', 'info');
+    const award = AppState.awards.find(a => a.id === awardId);
+    if (award) {
+        showAwardModal(award);
+    }
 }
 
 function deleteAward(awardId) {
@@ -1519,5 +1903,163 @@ function deleteAward(awardId) {
         AppState.awards = AppState.awards.filter(award => award.id !== awardId);
         renderAwards();
         showToast('수상 내역이 삭제되었습니다.');
+    }
+}
+
+function showAwardModal(award) {
+    const modalId = 'award-modal';
+    const existingModal = document.getElementById(modalId);
+    if (existingModal) existingModal.remove();
+
+    const title = award ? 'Edit Award' : 'Add Award';
+    const modalHTML = `
+        <div id="${modalId}" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>${title}</h2>
+                    <button class="modal-close" onclick="closeModal('${modalId}')"><i class="fas fa-times"></i></button>
+                </div>
+                <div class="modal-body">
+                    <form id="award-form" onsubmit="handleSaveAward(event, '${award?.id || ''}')">
+                        <div class="form-group">
+                            <label>Title</label>
+                            <input type="text" id="award-title" value="${award?.title || ''}" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Organization</label>
+                            <input type="text" id="award-organization" value="${award?.organization || ''}" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Year</label>
+                            <input type="number" id="award-year" value="${award?.year || new Date().getFullYear()}" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Description</label>
+                            <textarea id="award-description" rows="3">${award?.description || ''}</textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Icon (Font Awesome)</label>
+                            <input type="text" id="award-icon" value="${award?.icon || 'trophy'}">
+                            <small>e.g., trophy, medal, graduation-cap</small>
+                        </div>
+                        <div class="form-group">
+                            <label>Link</label>
+                            <input type="url" id="award-link" value="${award?.link || ''}">
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">Save</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    showModal(modalId);
+}
+
+function handleSaveAward(event, awardId) {
+    event.preventDefault();
+    if (!AppState.isAdmin) return;
+
+    const award = {
+        id: awardId || `award_${new Date().getTime()}`,
+        title: document.getElementById('award-title').value,
+        organization: document.getElementById('award-organization').value,
+        year: parseInt(document.getElementById('award-year').value, 10),
+        description: document.getElementById('award-description').value,
+        icon: document.getElementById('award-icon').value,
+        link: document.getElementById('award-link').value,
+    };
+
+    if (awardId) {
+        // Edit existing
+        const index = AppState.awards.findIndex(a => a.id === awardId);
+        AppState.awards[index] = award;
+    } else {
+        // Add new
+        AppState.awards.unshift(award);
+    }
+
+    renderAwards();
+    closeModal('award-modal');
+    showToast('Award saved successfully.');
+}
+
+// Timeline Management
+function loadTimeline() {
+    // Mock data for timeline
+    AppState.timeline = [
+        {
+            id: 't1',
+            year: '2024',
+            title: 'Senior Researcher',
+            description: 'Leading research in AI and Machine Learning at [Institution Name].',
+            icon: 'briefcase'
+        },
+        {
+            id: 't2',
+            year: '2020',
+            title: 'Ph.D. in Computer Science',
+            description: 'Dissertation: "Advanced Neural Network Architectures" at [University Name].',
+            icon: 'graduation-cap'
+        },
+        {
+            id: 't3',
+            year: '2016',
+            title: 'M.S. in Computer Science',
+            description: 'Specialization in Machine Learning at [University Name].',
+            icon: 'university'
+        }
+    ];
+    console.log('Timeline data loaded:', AppState.timeline);
+}
+
+function renderTimeline() {
+    const timelineList = document.getElementById('timeline-list');
+    if (!timelineList) return;
+
+    if (AppState.timeline.length === 0) {
+        timelineList.innerHTML = '<p class="no-data">No timeline events found.</p>';
+        return;
+    }
+
+    const timelineHTML = AppState.timeline.map(event => `
+        <div class="timeline-item">
+            <div class="timeline-icon">
+                <i class="fas fa-${event.icon}"></i>
+            </div>
+            <div class="timeline-content">
+                <span class="timeline-year">${event.year}</span>
+                <h3 class="timeline-title">${event.title}</h3>
+                <p>${event.description}</p>
+                <div class="admin-controls admin-only hidden">
+                    <button class="btn-small btn-primary" onclick="editTimeline('${event.id}')">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn-small btn-danger" onclick="deleteTimeline('${event.id}')">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    `).join('');
+
+    timelineList.innerHTML = timelineHTML;
+    updateAdminUI();
+}
+
+function editTimeline(eventId) {
+    if (!AppState.isAdmin) return;
+    showToast('타임라인 편집 기능이 곧 제공됩니다.', 'info');
+}
+
+function deleteTimeline(eventId) {
+    if (!AppState.isAdmin) return;
+    
+    if (confirm('이 타임라인 이벤트를 삭제하시겠습니까?')) {
+        AppState.timeline = AppState.timeline.filter(event => event.id !== eventId);
+        renderTimeline();
+        showToast('타임라인 이벤트가 삭제되었습니다.');
     }
 } 

@@ -305,6 +305,9 @@ async function handleUserSignedIn(user) {
         AppState.isAdmin = isAdmin;
     }
     
+    // Save admin status to localStorage for persistence
+    localStorage.setItem('is_admin', isAdmin.toString());
+    
     // Update admin UI visibility
     if (typeof updateAdminUI === 'function') {
         updateAdminUI();
@@ -333,6 +336,9 @@ function handleUserSignedOut() {
         AppState.user = null;
         AppState.isAdmin = false;
     }
+    
+    // Clear admin status from localStorage
+    localStorage.removeItem('is_admin');
     
     // Update admin UI visibility
     if (typeof updateAdminUI === 'function') {
