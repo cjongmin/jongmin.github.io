@@ -134,13 +134,18 @@ function configureFirestore() {
 async function loginWithGoogle() {
     console.log('Google login attempt...');
     
-    if (isMockMode) {
-        return mockLogin('Google');
+    // If Firebase isn't configured at all, show an error.
+    if (!hasValidFirebaseConfig()) {
+        showToast('Firebase is not configured. Cannot log in.', 'error');
+        return;
     }
     
+    // Even in mock mode, if the user clicks login, try a real login.
     if (!isFirebaseEnabled || !auth) {
-        showToast('Firebase not configured. Using mock login.', 'warning');
-        return mockLogin('Google');
+        showToast('Firebase is initializing, please try again shortly.', 'warning');
+        // Optionally, force re-initialization
+        // await initializeFirebase(); 
+        if (!auth) return; // if still no auth, exit
     }
     
     try {
@@ -156,21 +161,27 @@ async function loginWithGoogle() {
         
     } catch (error) {
         console.error('Google login error:', error);
-        showToast('Google 로그인 실패: ' + error.message, 'error');
+        if (error.code === 'auth/popup-closed-by-user') {
+            showToast('로그인 팝업이 닫혔습니다.', 'info');
+        } else {
+            showToast('Google 로그인 실패: ' + error.message, 'error');
+        }
         throw error;
     }
 }
 
 async function loginWithGitHub() {
     console.log('GitHub login attempt...');
-    
-    if (isMockMode) {
-        return mockLogin('GitHub');
+
+    // If Firebase isn't configured at all, show an error.
+    if (!hasValidFirebaseConfig()) {
+        showToast('Firebase is not configured. Cannot log in.', 'error');
+        return;
     }
     
     if (!isFirebaseEnabled || !auth) {
-        showToast('Firebase not configured. Using mock login.', 'warning');
-        return mockLogin('GitHub');
+        showToast('Firebase is initializing, please try again shortly.', 'warning');
+        if (!auth) return;
     }
     
     try {
@@ -186,7 +197,11 @@ async function loginWithGitHub() {
         
     } catch (error) {
         console.error('GitHub login error:', error);
-        showToast('GitHub 로그인 실패: ' + error.message, 'error');
+        if (error.code === 'auth/popup-closed-by-user') {
+            showToast('로그인 팝업이 닫혔습니다.', 'info');
+        } else {
+            showToast('GitHub 로그인 실패: ' + error.message, 'error');
+        }
         throw error;
     }
 }
@@ -275,21 +290,28 @@ async function logout() {
 
 // Mock authentication functions
 function mockLogin(provider = 'Google') {
+    console.warn(`Performing mock login with provider: ${provider}`);
+    
     const mockUser = {
-        uid: 'mock-user-123',
-        email: 'demo@example.com',
+        uid: 'mock_user_12345',
         displayName: 'Demo User',
-        photoURL: 'https://via.placeholder.com/40?text=DU'
+        email: 'demo@example.com',
+        photoURL: 'https://via.placeholder.com/150/007bff/ffffff?text=D'
     };
+
+    // Mock 사용자는 절대 관리자가 될 수 없음
+    localStorage.setItem('mock_is_admin', 'false');
     
-    window.mockAuth.currentUser = mockUser;
-    window.mockAuth.isSignedIn = true;
-    
-    handleUserSignedIn(mockUser);
-    showToast(`Mock ${provider} 로그인 성공! (데모 모드)`, 'success');
+    // handleUserSignedIn 함수를 직접 호출하지 않고, 전역 상태를 업데이트하고 UI를 직접 제어
+    AppState.user = mockUser;
+    AppState.isLoggedIn = true;
+    AppState.isAdmin = false; // Mock 유저는 관리자가 아님
+
+    updateUIForSignedInUser(mockUser);
+    updateAdminUI(); // isAdmin: false 상태로 UI 업데이트
+
+    showToast(`Mock login as Demo User.`, 'info');
     closeModal('login-modal');
-    
-    return Promise.resolve({ user: mockUser });
 }
 
 function mockLogout() {
@@ -304,42 +326,36 @@ function mockLogout() {
 
 // User state handlers
 async function handleUserSignedIn(user) {
-    console.log('Handling user signed in:', user.email || user.displayName);
+    if (!user) return;
     
-    // Update UI
+    AppState.isLoggedIn = true;
+    AppState.user = {
+        uid: user.uid,
+        displayName: user.displayName,
+        email: user.email,
+        photoURL: user.photoURL
+    };
+    
+    // 명확하게 이메일로 관리자 여부 확인
+    const isAdmin = user.email === 'cjmin2925@gmail.com';
+    AppState.isAdmin = isAdmin;
+    
+    console.log(`User signed in: ${user.email}, Is Admin: ${isAdmin}`);
+
+    // UI 업데이트
     updateUIForSignedInUser(user);
-    
-    // Check admin status
-    const isAdmin = await checkAdminStatus(user.uid);
-    
-    // Update app state
-    if (typeof AppState !== 'undefined') {
-        AppState.user = {
-            uid: user.uid,
-            email: user.email,
-            displayName: user.displayName,
-            photoURL: user.photoURL
-        };
-        AppState.isAdmin = isAdmin;
-    }
-    
-    // Save admin status to localStorage for persistence
-    localStorage.setItem('is_admin', isAdmin.toString());
-    
-    // Update admin UI visibility
-    if (typeof updateAdminUI === 'function') {
-        updateAdminUI();
-    }
-    
-    // Show welcome message
-    const welcomeMsg = isAdmin ? 
-        `관리자로 로그인했습니다, ${user.displayName || user.email}!` : 
-        `환영합니다, ${user.displayName || user.email}!`;
-    showToast(welcomeMsg, 'success');
-    
-    // Load user data (only if Firebase is enabled)
-    if (isFirebaseEnabled) {
-        await loadUserData(user.uid);
+    updateAdminUI();
+
+    // Firestore에 사용자 데이터 로드/생성 (온라인일 경우에만)
+    if (isFirebaseEnabled && db && !db.isOffline) {
+        try {
+            await loadUserData(user.uid);
+            if (isAdmin) {
+                await ensureAdminDocument(user.uid);
+            }
+        } catch (error) {
+            console.warn("Could not load/create user document, possibly offline.", error);
+        }
     }
 }
 
