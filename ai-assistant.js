@@ -15,6 +15,9 @@ class AIAssistant {
     }
     
     initialize() {
+        // Load API keys from localStorage
+        this.loadAPIKeys();
+        
         // Check if any API keys are available
         this.updateAvailability();
         
@@ -26,6 +29,19 @@ class AIAssistant {
         
         // Update UI
         this.updateUI();
+    }
+    
+    loadAPIKeys() {
+        // Load API keys from localStorage
+        this.apiKeys.openai = localStorage.getItem('openai_api_key') || null;
+        this.apiKeys.anthropic = localStorage.getItem('anthropic_api_key') || null;
+        this.apiKeys.google = localStorage.getItem('google_api_key') || null;
+        
+        console.log('API keys loaded:', {
+            openai: !!this.apiKeys.openai,
+            anthropic: !!this.apiKeys.anthropic,
+            google: !!this.apiKeys.google
+        });
     }
     
     setupEventListeners() {
@@ -416,8 +432,15 @@ function createAPISetupModal() {
                                 <i class="fas fa-robot"></i>
                                 OpenAI API Key (GPT-4, GPT-3.5)
                             </label>
-                            <input type="password" id="openai-key" placeholder="sk-..." 
-                                   value="${aiAssistant.getAPIKey('openai')}">
+                            <div class="api-key-input-group">
+                                <input type="password" id="openai-key" placeholder="sk-..." 
+                                       value="${aiAssistant.getAPIKey('openai') || ''}"
+                                       oninput="updateSaveButtonState()">
+                                <button type="button" class="verify-btn" onclick="verifyAPIKey('openai')" id="verify-openai">
+                                    <i class="fas fa-check-circle"></i> Verify
+                                </button>
+                                <span class="verification-status" id="openai-status"></span>
+                            </div>
                             <small>Get your key from <a href="https://platform.openai.com/api-keys" target="_blank">OpenAI Platform</a></small>
                         </div>
                         
@@ -426,8 +449,15 @@ function createAPISetupModal() {
                                 <i class="fas fa-brain"></i>
                                 Anthropic API Key (Claude-3)
                             </label>
-                            <input type="password" id="anthropic-key" placeholder="sk-ant-..." 
-                                   value="${aiAssistant.getAPIKey('anthropic')}">
+                            <div class="api-key-input-group">
+                                <input type="password" id="anthropic-key" placeholder="sk-ant-..." 
+                                       value="${aiAssistant.getAPIKey('anthropic') || ''}"
+                                       oninput="updateSaveButtonState()">
+                                <button type="button" class="verify-btn" onclick="verifyAPIKey('anthropic')" id="verify-anthropic">
+                                    <i class="fas fa-check-circle"></i> Verify
+                                </button>
+                                <span class="verification-status" id="anthropic-status"></span>
+                            </div>
                             <small>Get your key from <a href="https://console.anthropic.com/" target="_blank">Anthropic Console</a></small>
                         </div>
                         
@@ -436,8 +466,15 @@ function createAPISetupModal() {
                                 <i class="fab fa-google"></i>
                                 Google API Key (Gemini Pro)
                             </label>
-                            <input type="password" id="google-key" placeholder="AI..." 
-                                   value="${aiAssistant.getAPIKey('google')}">
+                            <div class="api-key-input-group">
+                                <input type="password" id="google-key" placeholder="AI..." 
+                                       value="${aiAssistant.getAPIKey('google') || ''}"
+                                       oninput="updateSaveButtonState()">
+                                <button type="button" class="verify-btn" onclick="verifyAPIKey('google')" id="verify-google">
+                                    <i class="fas fa-check-circle"></i> Verify
+                                </button>
+                                <span class="verification-status" id="google-status"></span>
+                            </div>
                             <small>Get your key from <a href="https://makersuite.google.com/app/apikey" target="_blank">Google AI Studio</a></small>
                         </div>
                         
@@ -447,7 +484,7 @@ function createAPISetupModal() {
                         </div>
                         
                         <div class="form-actions">
-                            <button type="submit" class="submit-btn">
+                            <button type="submit" class="submit-btn" id="save-api-keys" disabled>
                                 <i class="fas fa-save"></i>
                                 <span data-i18n="save_keys">Save Keys</span>
                             </button>
@@ -463,19 +500,19 @@ function createAPISetupModal() {
                         <div class="status-grid">
                             <div class="status-item">
                                 <span>OpenAI:</span>
-                                <span class="status ${aiAssistant.getAPIKey('openai') ? 'active' : 'inactive'}">
+                                <span class="status ${aiAssistant.getAPIKey('openai') ? 'active' : 'inactive'}" id="openai-config-status">
                                     ${aiAssistant.getAPIKey('openai') ? 'Configured' : 'Not configured'}
                                 </span>
                             </div>
                             <div class="status-item">
                                 <span>Anthropic:</span>
-                                <span class="status ${aiAssistant.getAPIKey('anthropic') ? 'active' : 'inactive'}">
+                                <span class="status ${aiAssistant.getAPIKey('anthropic') ? 'active' : 'inactive'}" id="anthropic-config-status">
                                     ${aiAssistant.getAPIKey('anthropic') ? 'Configured' : 'Not configured'}
                                 </span>
                             </div>
                             <div class="status-item">
                                 <span>Google:</span>
-                                <span class="status ${aiAssistant.getAPIKey('google') ? 'active' : 'inactive'}">
+                                <span class="status ${aiAssistant.getAPIKey('google') ? 'active' : 'inactive'}" id="google-config-status">
                                     ${aiAssistant.getAPIKey('google') ? 'Configured' : 'Not configured'}
                                 </span>
                             </div>
@@ -489,6 +526,163 @@ function createAPISetupModal() {
     document.body.insertAdjacentHTML('beforeend', modalHTML);
     updateLanguage();
     showModal('api-setup-modal');
+    
+    // Check verification status for existing keys
+    updateVerificationStatus();
+}
+
+// API 키 검증 기능
+async function verifyAPIKey(provider) {
+    const button = document.getElementById(`verify-${provider}`);
+    const status = document.getElementById(`${provider}-status`);
+    const input = document.getElementById(`${provider}-key`);
+    
+    const apiKey = input.value.trim();
+    if (!apiKey) {
+        status.innerHTML = '<span class="error"><i class="fas fa-exclamation-triangle"></i> No key provided</span>';
+        return;
+    }
+    
+    button.disabled = true;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying...';
+    status.innerHTML = '<span class="loading"><i class="fas fa-spinner fa-spin"></i> Verifying...</span>';
+    
+    try {
+        let isValid = false;
+        
+        switch (provider) {
+            case 'openai':
+                isValid = await verifyOpenAIKey(apiKey);
+                break;
+            case 'anthropic':
+                isValid = await verifyAnthropicKey(apiKey);
+                break;
+            case 'google':
+                isValid = await verifyGoogleKey(apiKey);
+                break;
+        }
+        
+        if (isValid) {
+            status.innerHTML = '<span class="success"><i class="fas fa-check-circle"></i> Valid key</span>';
+            button.innerHTML = '<i class="fas fa-check"></i> Verified';
+            button.classList.add('verified');
+            
+            // Store verification status
+            localStorage.setItem(`${provider}_key_verified`, 'true');
+            
+            updateSaveButtonState();
+        } else {
+            status.innerHTML = '<span class="error"><i class="fas fa-times-circle"></i> Invalid key</span>';
+            button.innerHTML = '<i class="fas fa-check-circle"></i> Verify';
+            button.classList.remove('verified');
+            localStorage.removeItem(`${provider}_key_verified`);
+        }
+    } catch (error) {
+        console.error(`Error verifying ${provider} key:`, error);
+        status.innerHTML = '<span class="error"><i class="fas fa-exclamation-triangle"></i> Verification failed</span>';
+        button.innerHTML = '<i class="fas fa-check-circle"></i> Verify';
+        button.classList.remove('verified');
+    }
+    
+    button.disabled = false;
+}
+
+// OpenAI 키 검증
+async function verifyOpenAIKey(apiKey) {
+    try {
+        const response = await fetch('https://api.openai.com/v1/models', {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${apiKey}`,
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        return response.ok;
+    } catch (error) {
+        console.error('OpenAI verification error:', error);
+        return false;
+    }
+}
+
+// Anthropic 키 검증
+async function verifyAnthropicKey(apiKey) {
+    try {
+        const response = await fetch('https://api.anthropic.com/v1/messages', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${apiKey}`,
+                'Content-Type': 'application/json',
+                'anthropic-version': '2023-06-01'
+            },
+            body: JSON.stringify({
+                model: 'claude-3-haiku-20240307',
+                max_tokens: 1,
+                messages: [{ role: 'user', content: 'test' }]
+            })
+        });
+        
+        // 401은 인증 실패, 다른 상태는 키가 유효할 수 있음
+        return response.status !== 401;
+    } catch (error) {
+        console.error('Anthropic verification error:', error);
+        return false;
+    }
+}
+
+// Google 키 검증
+async function verifyGoogleKey(apiKey) {
+    try {
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`, {
+            method: 'GET'
+        });
+        
+        return response.ok;
+    } catch (error) {
+        console.error('Google verification error:', error);
+        return false;
+    }
+}
+
+// 저장 버튼 상태 업데이트
+function updateSaveButtonState() {
+    const saveButton = document.getElementById('save-api-keys');
+    if (!saveButton) return;
+    
+    const openaiVerified = localStorage.getItem('openai_key_verified') === 'true';
+    const anthropicVerified = localStorage.getItem('anthropic_key_verified') === 'true';
+    const googleVerified = localStorage.getItem('google_key_verified') === 'true';
+    
+    const openaiKey = document.getElementById('openai-key')?.value.trim();
+    const anthropicKey = document.getElementById('anthropic-key')?.value.trim();
+    const googleKey = document.getElementById('google-key')?.value.trim();
+    
+    // 최소 하나의 키가 검증되었거나, 기존에 저장된 키가 있는 경우 저장 버튼 활성화
+    const hasValidKey = openaiVerified || anthropicVerified || googleVerified ||
+                       (openaiKey && aiAssistant.getAPIKey('openai')) ||
+                       (anthropicKey && aiAssistant.getAPIKey('anthropic')) ||
+                       (googleKey && aiAssistant.getAPIKey('google'));
+    
+    saveButton.disabled = !hasValidKey;
+}
+
+// 검증 상태 업데이트
+function updateVerificationStatus() {
+    ['openai', 'anthropic', 'google'].forEach(provider => {
+        const isVerified = localStorage.getItem(`${provider}_key_verified`) === 'true';
+        if (isVerified) {
+            const button = document.getElementById(`verify-${provider}`);
+            const status = document.getElementById(`${provider}-status`);
+            
+            if (button && status) {
+                button.innerHTML = '<i class="fas fa-check"></i> Verified';
+                button.classList.add('verified');
+                status.innerHTML = '<span class="success"><i class="fas fa-check-circle"></i> Valid key</span>';
+            }
+        }
+    });
+    
+    updateSaveButtonState();
 }
 
 function handleAPISetup(event) {
@@ -498,13 +692,28 @@ function handleAPISetup(event) {
     const anthropicKey = document.getElementById('anthropic-key').value.trim();
     const googleKey = document.getElementById('google-key').value.trim();
     
-    // Save API keys
-    if (openaiKey) aiAssistant.setAPIKey('openai', openaiKey);
-    if (anthropicKey) aiAssistant.setAPIKey('anthropic', anthropicKey);
-    if (googleKey) aiAssistant.setAPIKey('google', googleKey);
+    // Save API keys only if they are verified or if they're existing keys
+    let savedCount = 0;
     
-    showToast('API 키가 저장되었습니다.');
-    closeModal('api-setup-modal');
+    if (openaiKey && (localStorage.getItem('openai_key_verified') === 'true' || aiAssistant.getAPIKey('openai'))) {
+        aiAssistant.setAPIKey('openai', openaiKey);
+        savedCount++;
+    }
+    if (anthropicKey && (localStorage.getItem('anthropic_key_verified') === 'true' || aiAssistant.getAPIKey('anthropic'))) {
+        aiAssistant.setAPIKey('anthropic', anthropicKey);
+        savedCount++;
+    }
+    if (googleKey && (localStorage.getItem('google_key_verified') === 'true' || aiAssistant.getAPIKey('google'))) {
+        aiAssistant.setAPIKey('google', googleKey);
+        savedCount++;
+    }
+    
+    if (savedCount > 0) {
+        showToast(`${savedCount}개의 API 키가 저장되었습니다.`);
+        closeModal('api-setup-modal');
+    } else {
+        showToast('저장할 수 있는 검증된 API 키가 없습니다.', 'error');
+    }
 }
 
 function clearAPIKeys() {

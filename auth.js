@@ -7,7 +7,7 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 
 // Admin email for special permissions
-const ADMIN_EMAIL = 'cjmin@gmail.com';
+const ADMIN_EMAIL = 'cjmin2925@gmail.com';
 
 // Function to check if a user is an admin
 async function isAdmin(user) {

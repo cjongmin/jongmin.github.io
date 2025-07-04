@@ -97,10 +97,25 @@ const sectionTemplates = {
             <h1 data-i18n="about">About Me</h1>
             <button class="edit-btn admin-only hidden" onclick="editSection('about')">
                 <i class="fas fa-edit"></i>
+                <span data-i18n="edit">편집</span>
             </button>
         </div>
         
         <div class="about-content">
+            <div class="profile-edit-section admin-only hidden">
+                <h3 data-i18n="profile_management">프로필 관리</h3>
+                <div class="profile-controls">
+                    <button class="btn btn-secondary" onclick="showProfileEditModal()">
+                        <i class="fas fa-edit"></i>
+                        <span data-i18n="edit_profile">프로필 편집</span>
+                    </button>
+                    <button class="btn btn-secondary" onclick="showProfilePhotoModal()">
+                        <i class="fas fa-camera"></i>
+                        <span data-i18n="change_photo">사진 변경</span>
+                    </button>
+                </div>
+            </div>
+            
             <div class="about-text" id="about-text">
                 <p>안녕하세요! 저는 인공지능과 머신러닝 분야의 연구자입니다. 특히 자연어처리와 컴퓨터 비전 분야에서 혁신적인 연구를 수행하고 있습니다.</p>
                 <p>현재 [대학명/연구소명]에서 [직책]으로 재직 중이며, 최첨단 AI 기술을 활용한 실용적인 솔루션 개발에 집중하고 있습니다.</p>
@@ -115,6 +130,9 @@ const sectionTemplates = {
                     <span class="tag">Deep Learning</span>
                     <span class="tag">AI Ethics</span>
                 </div>
+                <button class="edit-btn admin-only hidden" onclick="editResearchInterests()">
+                    <i class="fas fa-edit"></i>
+                </button>
             </div>
             
             <div class="education">
@@ -129,6 +147,9 @@ const sectionTemplates = {
                     <div class="institution">[University Name]</div>
                     <div class="year">2016</div>
                 </div>
+                <button class="edit-btn admin-only hidden" onclick="editEducation()">
+                    <i class="fas fa-edit"></i>
+                </button>
             </div>
         </div>
     `,
@@ -186,6 +207,14 @@ const sectionTemplates = {
                         <a href="javascript:void(0)" class="project-link" onclick="event.preventDefault()"><i class="fab fa-github"></i> GitHub</a>
                         <a href="javascript:void(0)" class="project-link" onclick="event.preventDefault()"><i class="fas fa-external-link-alt"></i> Demo</a>
                     </div>
+                    <div class="admin-controls admin-only hidden">
+                        <button class="btn-small btn-primary" onclick="editProject(1)">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn-small btn-danger" onclick="deleteProject(1)">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
                 </div>
             </div>
             
@@ -198,26 +227,30 @@ const sectionTemplates = {
                     <p>A comprehensive platform for analyzing and visualizing research data with advanced machine learning capabilities.</p>
                     <div class="project-technologies">
                         <span class="tech-tag">Python</span>
-                        <span class="tech-tag">PostgreSQL</span>
+                        <span class="tech-tag">Pandas</span>
                         <span class="tech-tag">D3.js</span>
-                        <span class="tech-tag">Docker</span>
+                        <span class="tech-tag">PostgreSQL</span>
                     </div>
                     <div class="project-links">
                         <a href="javascript:void(0)" class="project-link" onclick="event.preventDefault()"><i class="fab fa-github"></i> GitHub</a>
                         <a href="javascript:void(0)" class="project-link" onclick="event.preventDefault()"><i class="fas fa-external-link-alt"></i> Demo</a>
                     </div>
+                    <div class="admin-controls admin-only hidden">
+                        <button class="btn-small btn-primary" onclick="editProject(2)">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn-small btn-danger" onclick="deleteProject(2)">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
                 </div>
             </div>
-        </div>
-        
-        <div id="projects-grid" class="projects-grid hidden">
-            <!-- Dynamic projects will be loaded here -->
         </div>
     `,
     
     awards: `
         <div class="section-header">
-            <h1 data-i18n="awards">Honors & Awards</h1>
+            <h1 data-i18n="awards">Awards</h1>
             <button class="add-btn admin-only hidden" onclick="showAddAwardModal()">
                 <i class="fas fa-plus"></i>
                 <span data-i18n="add_award">Add Award</span>
@@ -225,178 +258,21 @@ const sectionTemplates = {
         </div>
         
         <div id="awards-list" class="awards-list">
-            <!-- Awards will be loaded here -->
-        </div>
-    `,
-    
-    contact: `
-        <div class="section-header">
-            <h1 data-i18n="contact">Contact</h1>
-        </div>
-        
-        <div class="contact-content">
-            <div class="contact-info">
-                <div class="contact-item">
-                    <i class="fas fa-envelope"></i>
-                    <span>jongmin@mmai.io</span>
-                </div>
-                <div class="contact-item">
-                    <i class="fas fa-phone"></i>
-                    <span>+82 10-2925-6477</span>
-                </div>
-                <div class="contact-item">
-                    <i class="fas fa-map-marker-alt"></i>
-                    <span>KAIST, 291 Daehak-ro, Yuseong-gu, Daejeon, Republic of Korea, 34141</span>
-                </div>
-            </div>
-            
-            <form id="contact-form" class="contact-form" onsubmit="handleContactForm(event)">
-                <div class="form-group">
-                    <label for="contact-name" data-i18n="name">Name</label>
-                    <input type="text" id="contact-name" required>
-                </div>
-                <div class="form-group">
-                    <label for="contact-email" data-i18n="email">Email</label>
-                    <input type="email" id="contact-email" required>
-                </div>
-                <div class="form-group">
-                    <label for="contact-subject" data-i18n="subject">Subject</label>
-                    <input type="text" id="contact-subject" required>
-                </div>
-                <div class="form-group">
-                    <label for="contact-message" data-i18n="message">Message</label>
-                    <textarea id="contact-message" rows="5" required></textarea>
-                </div>
-                <button type="submit" class="submit-btn">
-                    <i class="fas fa-paper-plane"></i>
-                    <span data-i18n="send_message">Send Message</span>
-                </button>
-            </form>
-        </div>
-    `,
-    
-    feedback: `
-        <div class="section-header">
-            <h1 data-i18n="feedback">Visitor Feedback</h1>
-        </div>
-        
-        <div id="feedback-container">
-            <form id="feedback-form" class="feedback-form" onsubmit="handleFeedbackForm(event)">
-                <div class="form-group">
-                    <label for="feedback-rating" data-i18n="rating">Rating</label>
-                    <div class="rating-stars">
-                        <i class="fas fa-star" data-rating="1" onclick="setRating(1)"></i>
-                        <i class="fas fa-star" data-rating="2" onclick="setRating(2)"></i>
-                        <i class="fas fa-star" data-rating="3" onclick="setRating(3)"></i>
-                        <i class="fas fa-star" data-rating="4" onclick="setRating(4)"></i>
-                        <i class="fas fa-star" data-rating="5" onclick="setRating(5)"></i>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label for="feedback-comment" data-i18n="comment">Comment</label>
-                    <textarea id="feedback-comment" rows="4" placeholder="Share your thoughts about my research..."></textarea>
-                </div>
-                <button type="submit" class="submit-btn">
-                    <i class="fas fa-comment"></i>
-                    <span data-i18n="submit_feedback">Submit Feedback</span>
-                </button>
-            </form>
-            
-            <div id="feedback-list" class="feedback-list">
-                <!-- Feedback will be loaded here -->
-            </div>
+            <!-- Awards will be loaded here with admin controls -->
         </div>
     `,
     
     timeline: `
         <div class="section-header">
             <h1 data-i18n="timeline">Timeline</h1>
+            <button class="add-btn admin-only hidden" onclick="showAddTimelineModal()">
+                <i class="fas fa-plus"></i>
+                <span data-i18n="add_timeline">Add Event</span>
+            </button>
         </div>
         
-        <div class="timeline-container">
-            <div class="timeline-item">
-                <div class="timeline-date">2024</div>
-                <div class="timeline-content">
-                    <h3>Current Position</h3>
-                    <p>Senior Researcher at [Institution Name]</p>
-                    <p>Leading research in AI and Machine Learning</p>
-                </div>
-            </div>
-            <div class="timeline-item">
-                <div class="timeline-date">2020</div>
-                <div class="timeline-content">
-                    <h3>Ph.D. in Computer Science</h3>
-                    <p>[University Name]</p>
-                    <p>Dissertation: "Advanced Neural Network Architectures"</p>
-                </div>
-            </div>
-            <div class="timeline-item">
-                <div class="timeline-date">2016</div>
-                <div class="timeline-content">
-                    <h3>M.S. in Computer Science</h3>
-                    <p>[University Name]</p>
-                    <p>Specialization in Machine Learning</p>
-                </div>
-            </div>
-        </div>
-    `,
-    
-    collaboration: `
-        <div class="section-header">
-            <h1 data-i18n="collaboration">Collaboration</h1>
-        </div>
-        
-        <div class="collaboration-content">
-            <div class="collaboration-intro">
-                <p>I'm always interested in collaborating with fellow researchers, industry partners, and students. Here are some areas where I'm looking for collaboration:</p>
-            </div>
-            
-            <div class="collaboration-areas">
-                <div class="collaboration-card">
-                    <i class="fas fa-brain"></i>
-                    <h3>Research Collaboration</h3>
-                    <p>Joint research projects in AI, ML, and NLP</p>
-                </div>
-                <div class="collaboration-card">
-                    <i class="fas fa-industry"></i>
-                    <h3>Industry Partnership</h3>
-                    <p>Applied research and technology transfer</p>
-                </div>
-                <div class="collaboration-card">
-                    <i class="fas fa-graduation-cap"></i>
-                    <h3>Student Mentoring</h3>
-                    <p>PhD and Master's student supervision</p>
-                </div>
-            </div>
-            
-            <div class="collaboration-form">
-                <h3>Collaboration Proposal</h3>
-                <form id="collaboration-form" onsubmit="handleCollaborationForm(event)">
-                    <div class="form-group">
-                        <label for="collab-name">Name</label>
-                        <input type="text" id="collab-name" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="collab-email">Email</label>
-                        <input type="email" id="collab-email" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="collab-type">Collaboration Type</label>
-                        <select id="collab-type" required>
-                            <option value="">Select Type</option>
-                            <option value="research">Research Collaboration</option>
-                            <option value="industry">Industry Partnership</option>
-                            <option value="mentoring">Student Mentoring</option>
-                            <option value="other">Other</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="collab-proposal">Proposal Description</label>
-                        <textarea id="collab-proposal" rows="5" required></textarea>
-                    </div>
-                    <button type="submit" class="submit-btn">Send Proposal</button>
-                </form>
-            </div>
+        <div id="timeline-list" class="timeline-list">
+            <!-- Timeline events will be loaded here with admin controls -->
         </div>
     `
 };
@@ -421,48 +297,50 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function initializeApp() {
-    console.log('Initializing app...');
+    console.log('Initializing Profile Page Application...');
     
-    // Load saved preferences
-    loadPreferences();
-    
-    // Initialize theme
-    applyTheme(AppState.currentTheme);
-    
-    // Initialize language
-    updateLanguage();
-    
-    // Set up all event listeners
-    setupNavigationEventListeners();
-    setupHeaderEventListeners();
-    setupMobileEventListeners();
-    
-    // Initialize AI assistant resize functionality
-    initializeAIResize();
-    
-    // Show initial section
-    showSection(AppState.currentSection);
-    
-    // Initialize Firebase
+    // Initialize Firebase first
     if (typeof initializeFirebase === 'function') {
         initializeFirebase();
     }
     
-    // Load data
-    loadAllData();
-    
     // Hide loading screen
-    setTimeout(() => {
-        const loadingScreen = document.getElementById('loading-screen');
-        if (loadingScreen) {
+    const loadingScreen = document.getElementById('loading-screen');
+    if (loadingScreen) {
+        setTimeout(() => {
             loadingScreen.style.opacity = '0';
             setTimeout(() => {
                 loadingScreen.style.display = 'none';
-            }, 300);
-        }
-    }, 1000);
+            }, 500);
+        }, 1000);
+    }
     
-    console.log('App initialization complete');
+    // Load preferences
+    loadPreferences();
+    
+    // Load saved profile data
+    loadSavedProfileData();
+    
+    // Initialize sections
+    showSection('about');
+    
+    // Set up event listeners
+    setupNavigationEventListeners();
+    setupHeaderEventListeners();
+    setupMobileEventListeners();
+    
+    // Initialize AI assistant
+    if (typeof aiAssistant !== 'undefined') {
+        console.log('AI Assistant initialized');
+    }
+    
+    // Load all data
+    loadAllData();
+    
+    // Initialize resize functionality
+    initializeAIResize();
+    
+    console.log('Application initialized successfully!');
 }
 
 function loadPreferences() {
@@ -476,6 +354,41 @@ function loadPreferences() {
     const savedLanguage = localStorage.getItem('language');
     if (savedLanguage) {
         AppState.currentLanguage = savedLanguage;
+    }
+}
+
+function loadSavedProfileData() {
+    try {
+        // Load profile data
+        const savedProfile = localStorage.getItem('profile_data');
+        if (savedProfile) {
+            const profileData = JSON.parse(savedProfile);
+            
+            const profileName = document.getElementById('profile-name');
+            const profileTitle = document.getElementById('profile-title');
+            
+            if (profileName && profileData.name) {
+                profileName.textContent = profileData.name;
+            }
+            if (profileTitle && profileData.title) {
+                profileTitle.textContent = profileData.title;
+            }
+            
+            console.log('Profile data loaded from localStorage');
+        }
+        
+        // Load profile photo
+        const savedPhoto = localStorage.getItem('profile_photo');
+        if (savedPhoto) {
+            const profileImg = document.getElementById('profile-img');
+            if (profileImg) {
+                profileImg.src = savedPhoto;
+                console.log('Profile photo loaded from localStorage');
+            }
+        }
+        
+    } catch (error) {
+        console.error('Error loading saved profile data:', error);
     }
 }
 
@@ -842,29 +755,35 @@ function loadAwards() {
 function renderAwards() {
     const awardsList = document.getElementById('awards-list');
     if (!awardsList) return;
-    
-    if (AppState.awards.length === 0) {
-        awardsList.innerHTML = '<p class="no-data">No awards found.</p>';
-        return;
-    }
-    
-    const awardsHTML = AppState.awards.map(award => `
+
+    const awardCards = AppState.awards.map(award => `
         <div class="award-card">
-            <div class="award-header">
-                <div class="award-icon">
-                    <i class="fas fa-${award.icon || 'trophy'}"></i>
-                </div>
-                <div class="award-info">
-                    <h3 class="award-title">${award.title}</h3>
-                    <div class="award-organization">${award.organization}</div>
-                    <div class="award-date">${award.year}</div>
+            <div class="award-icon">
+                <i class="fas fa-${award.icon}"></i>
+            </div>
+            <div class="award-content">
+                <h3>${award.title}</h3>
+                <p class="award-description">${award.description}</p>
+                <div class="award-meta">
+                    <span class="award-year">${award.year}</span>
+                    <span class="award-organization">${award.organization}</span>
                 </div>
             </div>
-            <div class="award-description">${award.description}</div>
+            <div class="admin-controls admin-only hidden">
+                <button class="btn-small btn-primary" onclick="editAward('${award.id}')">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button class="btn-small btn-danger" onclick="deleteAward('${award.id}')">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
         </div>
     `).join('');
+
+    awardsList.innerHTML = awardCards;
     
-    awardsList.innerHTML = awardsHTML;
+    // Update admin UI visibility
+    updateAdminUI();
 }
 
 function updateStats() {
@@ -1282,5 +1201,323 @@ function handleCollaborationForm(event) {
         window.open(mailtoLink);
         showToast('이메일 클라이언트를 통해 협업 제안을 보내주세요.', 'info');
         document.getElementById('collaboration-form').reset();
+    }
+}
+
+// Profile management functions (admin only)
+function showProfileEditModal() {
+    if (!AppState.isAdmin) {
+        showToast('관리자만 접근할 수 있습니다.', 'error');
+        return;
+    }
+    
+    const modalHTML = `
+        <div id="profile-edit-modal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 data-i18n="edit_profile">프로필 편집</h2>
+                    <button class="modal-close" onclick="closeModal('profile-edit-modal')">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="profile-edit-form" onsubmit="handleProfileEdit(event)">
+                        <div class="form-group">
+                            <label for="profile-name-edit" data-i18n="name">이름</label>
+                            <input type="text" id="profile-name-edit" 
+                                   value="${document.getElementById('profile-name')?.textContent || 'Dr. [Your Name]'}" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="profile-title-edit" data-i18n="title">직책</label>
+                            <input type="text" id="profile-title-edit" 
+                                   value="${document.getElementById('profile-title')?.textContent || 'AI Researcher & Data Scientist'}" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="profile-bio-edit" data-i18n="bio">소개</label>
+                            <textarea id="profile-bio-edit" rows="4" placeholder="자신에 대한 간단한 소개를 작성하세요...">${document.getElementById('about-text')?.textContent || ''}</textarea>
+                        </div>
+                        
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i>
+                                <span data-i18n="save">저장</span>
+                            </button>
+                            <button type="button" class="btn btn-secondary" onclick="closeModal('profile-edit-modal')">
+                                <span data-i18n="cancel">취소</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    updateLanguage();
+    showModal('profile-edit-modal');
+}
+
+function showProfilePhotoModal() {
+    if (!AppState.isAdmin) {
+        showToast('관리자만 접근할 수 있습니다.', 'error');
+        return;
+    }
+    
+    const modalHTML = `
+        <div id="profile-photo-modal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 data-i18n="change_photo">프로필 사진 변경</h2>
+                    <button class="modal-close" onclick="closeModal('profile-photo-modal')">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="photo-upload-section">
+                        <div class="current-photo">
+                            <img id="current-photo-preview" src="${document.getElementById('profile-img')?.src || 'https://via.placeholder.com/120'}" alt="Current Profile">
+                            <p data-i18n="current_photo">현재 프로필 사진</p>
+                        </div>
+                        
+                        <div class="photo-options">
+                            <div class="form-group">
+                                <label for="photo-url" data-i18n="photo_url">사진 URL</label>
+                                <input type="url" id="photo-url" placeholder="https://example.com/photo.jpg">
+                                <small data-i18n="photo_url_desc">온라인 이미지 URL을 입력하세요</small>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="photo-upload" data-i18n="upload_photo">파일 업로드</label>
+                                <input type="file" id="photo-upload" accept="image/*" onchange="previewPhoto(event)">
+                                <small data-i18n="upload_desc">JPG, PNG 파일을 선택하세요 (최대 2MB)</small>
+                            </div>
+                            
+                            <div class="photo-preview" id="photo-preview" style="display: none;">
+                                <img id="new-photo-preview" src="" alt="New Photo Preview">
+                            </div>
+                        </div>
+                        
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-primary" onclick="saveProfilePhoto()">
+                                <i class="fas fa-save"></i>
+                                <span data-i18n="save_photo">사진 저장</span>
+                            </button>
+                            <button type="button" class="btn btn-danger" onclick="deleteProfilePhoto()">
+                                <i class="fas fa-trash"></i>
+                                <span data-i18n="delete_photo">사진 삭제</span>
+                            </button>
+                            <button type="button" class="btn btn-secondary" onclick="closeModal('profile-photo-modal')">
+                                <span data-i18n="cancel">취소</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    updateLanguage();
+    showModal('profile-photo-modal');
+}
+
+function handleProfileEdit(event) {
+    event.preventDefault();
+    
+    if (!AppState.isAdmin) {
+        showToast('관리자만 접근할 수 있습니다.', 'error');
+        return;
+    }
+    
+    const name = document.getElementById('profile-name-edit').value.trim();
+    const title = document.getElementById('profile-title-edit').value.trim();
+    const bio = document.getElementById('profile-bio-edit').value.trim();
+    
+    // Update profile information
+    const profileName = document.getElementById('profile-name');
+    const profileTitle = document.getElementById('profile-title');
+    const aboutText = document.getElementById('about-text');
+    
+    if (profileName) profileName.textContent = name;
+    if (profileTitle) profileTitle.textContent = title;
+    if (aboutText && bio) {
+        aboutText.innerHTML = bio.split('\n').map(p => `<p>${p}</p>`).join('');
+    }
+    
+    // Save to localStorage (for demo purposes)
+    localStorage.setItem('profile_data', JSON.stringify({
+        name: name,
+        title: title,
+        bio: bio,
+        updated: new Date().toISOString()
+    }));
+    
+    showToast('프로필이 업데이트되었습니다.');
+    closeModal('profile-edit-modal');
+}
+
+function previewPhoto(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    // Check file size (2MB limit)
+    if (file.size > 2 * 1024 * 1024) {
+        showToast('파일 크기는 2MB 이하여야 합니다.', 'error');
+        return;
+    }
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const preview = document.getElementById('photo-preview');
+        const img = document.getElementById('new-photo-preview');
+        
+        img.src = e.target.result;
+        preview.style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+}
+
+function saveProfilePhoto() {
+    if (!AppState.isAdmin) {
+        showToast('관리자만 접근할 수 있습니다.', 'error');
+        return;
+    }
+    
+    const photoUrl = document.getElementById('photo-url').value.trim();
+    const photoFile = document.getElementById('photo-upload').files[0];
+    
+    let newPhotoSrc = null;
+    
+    if (photoUrl) {
+        newPhotoSrc = photoUrl;
+    } else if (photoFile) {
+        // In a real implementation, you would upload to a service
+        // For demo, we'll use the file reader result
+        const preview = document.getElementById('new-photo-preview');
+        if (preview && preview.src) {
+            newPhotoSrc = preview.src;
+        }
+    }
+    
+    if (newPhotoSrc) {
+        const profileImg = document.getElementById('profile-img');
+        if (profileImg) {
+            profileImg.src = newPhotoSrc;
+            localStorage.setItem('profile_photo', newPhotoSrc);
+            showToast('프로필 사진이 변경되었습니다.');
+            closeModal('profile-photo-modal');
+        }
+    } else {
+        showToast('사진을 선택하거나 URL을 입력해주세요.', 'error');
+    }
+}
+
+function deleteProfilePhoto() {
+    if (!AppState.isAdmin) {
+        showToast('관리자만 접근할 수 있습니다.', 'error');
+        return;
+    }
+    
+    if (confirm('프로필 사진을 삭제하시겠습니까?')) {
+        const profileImg = document.getElementById('profile-img');
+        if (profileImg) {
+            profileImg.src = 'https://via.placeholder.com/120';
+            localStorage.removeItem('profile_photo');
+            showToast('프로필 사진이 삭제되었습니다.');
+            closeModal('profile-photo-modal');
+        }
+    }
+}
+
+// Content management functions (admin only)
+function editResearchInterests() {
+    if (!AppState.isAdmin) return;
+    
+    showToast('연구 관심사 편집 기능이 곧 제공됩니다.', 'info');
+}
+
+function editEducation() {
+    if (!AppState.isAdmin) return;
+    
+    showToast('학력 편집 기능이 곧 제공됩니다.', 'info');
+}
+
+function editProject(projectId) {
+    if (!AppState.isAdmin) return;
+    
+    showToast('프로젝트 편집 기능이 곧 제공됩니다.', 'info');
+}
+
+function deleteProject(projectId) {
+    if (!AppState.isAdmin) return;
+    
+    if (confirm('이 프로젝트를 삭제하시겠습니까?')) {
+        showToast('프로젝트 삭제 기능이 곧 제공됩니다.', 'info');
+    }
+}
+
+function showAddPublicationModal() {
+    if (!AppState.isAdmin) return;
+    
+    showToast('논문 추가 기능이 곧 제공됩니다.', 'info');
+}
+
+function showAddProjectModal() {
+    if (!AppState.isAdmin) return;
+    
+    showToast('프로젝트 추가 기능이 곧 제공됩니다.', 'info');
+}
+
+function showAddAwardModal() {
+    if (!AppState.isAdmin) return;
+    
+    showToast('수상 내역 추가 기능이 곧 제공됩니다.', 'info');
+}
+
+function showAddTimelineModal() {
+    if (!AppState.isAdmin) return;
+    
+    showToast('타임라인 이벤트 추가 기능이 곧 제공됩니다.', 'info');
+}
+
+// Admin UI visibility control
+function updateAdminUI() {
+    const adminElements = document.querySelectorAll('.admin-only');
+    
+    adminElements.forEach(element => {
+        if (AppState.isAdmin) {
+            element.classList.remove('hidden');
+            element.style.display = '';
+        } else {
+            element.classList.add('hidden');
+            element.style.display = 'none';
+        }
+    });
+    
+    // Update body class for admin mode
+    if (AppState.isAdmin) {
+        document.body.classList.add('admin-mode');
+    } else {
+        document.body.classList.remove('admin-mode');
+    }
+    
+    console.log(`Admin UI updated - Admin: ${AppState.isAdmin}`);
+}
+
+// Add award management functions
+function editAward(awardId) {
+    if (!AppState.isAdmin) return;
+    showToast('수상 내역 편집 기능이 곧 제공됩니다.', 'info');
+}
+
+function deleteAward(awardId) {
+    if (!AppState.isAdmin) return;
+    
+    if (confirm('이 수상 내역을 삭제하시겠습니까?')) {
+        AppState.awards = AppState.awards.filter(award => award.id !== awardId);
+        renderAwards();
+        showToast('수상 내역이 삭제되었습니다.');
     }
 } 

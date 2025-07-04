@@ -97,6 +97,13 @@
     --font-medium: 500;
     --font-semibold: 600;
     --font-bold: 700;
+
+    /* New colors for API key verification */
+    --success-color: #22c55e;
+    --success-light: #dcfce7;
+    --error-color: #ef4444;
+    --error-light: #fee2e2;
+    --primary-hover: #3b82f6;
 }
 
 /* Dark Theme - Modern Professional */
@@ -123,6 +130,10 @@
     --border-focus: #3b82f6;
     
     --gradient-primary: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%);
+
+    /* New colors for dark theme */
+    --success-light: #064e3b;
+    --error-light: #7f1d1d;
 }
 
 /* Reset and base styles */
@@ -2035,4 +2046,415 @@ body {
 .login-welcome p {
     color: var(--text-secondary);
     font-size: var(--font-size-md);
+}
+
+/* API Setup Modal Styles */
+.api-key-input-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 5px;
+}
+
+.api-key-input-group input {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    font-size: 14px;
+}
+
+.verify-btn {
+    padding: 8px 16px;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 12px;
+    white-space: nowrap;
+    transition: all 0.3s ease;
+}
+
+.verify-btn:hover {
+    background: var(--primary-hover);
+}
+
+.verify-btn:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+}
+
+.verify-btn.verified {
+    background: var(--success-color);
+}
+
+.verification-status {
+    min-width: 120px;
+    font-size: 12px;
+}
+
+.verification-status .success {
+    color: var(--success-color);
+}
+
+.verification-status .error {
+    color: var(--error-color);
+}
+
+.verification-status .loading {
+    color: var(--primary-color);
+}
+
+.api-status {
+    margin-top: 20px;
+    padding: 15px;
+    background: var(--card-bg);
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+}
+
+.status-grid {
+    display: grid;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.status-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    background: var(--bg-color);
+    border-radius: 5px;
+}
+
+.status-item .status {
+    font-weight: 500;
+    padding: 3px 8px;
+    border-radius: 3px;
+    font-size: 12px;
+}
+
+.status-item .status.active {
+    background: var(--success-light);
+    color: var(--success-color);
+}
+
+.status-item .status.inactive {
+    background: var(--error-light);
+    color: var(--error-color);
+}
+
+/* Submit button disabled state */
+.submit-btn:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+/* Admin UI Styles */
+.admin-only {
+    display: none !important;
+}
+
+body.admin-mode .admin-only {
+    display: block !important;
+}
+
+body.admin-mode .admin-only.hidden {
+    display: none !important;
+}
+
+.profile-edit-section {
+    background: var(--card-bg);
+    border: 2px dashed var(--primary-color);
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+.profile-edit-section h3 {
+    color: var(--primary-color);
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.profile-edit-section h3:before {
+    content: "👑";
+    font-size: 18px;
+}
+
+.profile-controls {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.profile-controls .btn {
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+}
+
+.edit-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    z-index: 10;
+}
+
+.edit-btn:hover {
+    background: var(--primary-hover);
+    transform: scale(1.1);
+}
+
+.research-interests,
+.education {
+    position: relative;
+}
+
+.admin-controls {
+    margin-top: 15px;
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.project-card:hover .admin-controls {
+    opacity: 1;
+}
+
+.btn-small {
+    padding: 6px 10px;
+    font-size: 12px;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.btn-small.btn-primary {
+    background: var(--primary-color);
+    color: white;
+}
+
+.btn-small.btn-primary:hover {
+    background: var(--primary-hover);
+}
+
+.btn-small.btn-danger {
+    background: var(--error-color);
+    color: white;
+}
+
+.btn-small.btn-danger:hover {
+    background: #dc2626;
+}
+
+.add-btn {
+    background: var(--success-color);
+    color: white;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+}
+
+.add-btn:hover {
+    background: #16a34a;
+    transform: translateY(-2px);
+}
+
+/* Profile Photo Modal Styles */
+.photo-upload-section {
+    display: grid;
+    gap: 30px;
+}
+
+.current-photo {
+    text-align: center;
+}
+
+.current-photo img {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid var(--border-color);
+    margin-bottom: 10px;
+}
+
+.photo-options {
+    display: grid;
+    gap: 20px;
+}
+
+.photo-preview {
+    text-align: center;
+    margin-top: 15px;
+}
+
+.photo-preview img {
+    max-width: 150px;
+    max-height: 150px;
+    border-radius: 8px;
+    border: 2px solid var(--border-color);
+}
+
+.form-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 20px;
+}
+
+.btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+}
+
+.btn.btn-primary {
+    background: var(--primary-color);
+    color: white;
+}
+
+.btn.btn-primary:hover {
+    background: var(--primary-hover);
+}
+
+.btn.btn-secondary {
+    background: var(--border-color);
+    color: var(--text-color);
+}
+
+.btn.btn-secondary:hover {
+    background: #9ca3af;
+}
+
+.btn.btn-danger {
+    background: var(--error-color);
+    color: white;
+}
+
+.btn.btn-danger:hover {
+    background: #dc2626;
+}
+
+/* Modal form styles */
+.modal .form-group {
+    margin-bottom: 20px;
+}
+
+.modal .form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+    color: var(--text-color);
+}
+
+.modal .form-group input,
+.modal .form-group textarea,
+.modal .form-group select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    font-size: 14px;
+    background: var(--input-bg);
+    color: var(--text-color);
+}
+
+.modal .form-group input:focus,
+.modal .form-group textarea:focus,
+.modal .form-group select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.modal .form-group small {
+    display: block;
+    margin-top: 5px;
+    color: var(--text-secondary);
+    font-size: 12px;
+}
+
+/* Section controls */
+.section-controls {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.search-filter {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.search-filter input,
+.search-filter select {
+    padding: 8px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    font-size: 14px;
+    background: var(--input-bg);
+    color: var(--text-color);
+}
+
+/* Admin indicator */
+body.admin-mode::before {
+    content: "🛡️ Admin Mode";
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    background: var(--primary-color);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 15px;
+    font-size: 12px;
+    font-weight: 500;
+    z-index: 9999;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
 } 

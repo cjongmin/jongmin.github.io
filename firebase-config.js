@@ -305,6 +305,17 @@ async function handleUserSignedIn(user) {
         AppState.isAdmin = isAdmin;
     }
     
+    // Update admin UI visibility
+    if (typeof updateAdminUI === 'function') {
+        updateAdminUI();
+    }
+    
+    // Show welcome message
+    const welcomeMsg = isAdmin ? 
+        `관리자로 로그인했습니다, ${user.displayName || user.email}!` : 
+        `환영합니다, ${user.displayName || user.email}!`;
+    showToast(welcomeMsg, 'success');
+    
     // Load user data (only if Firebase is enabled)
     if (isFirebaseEnabled) {
         await loadUserData(user.uid);
@@ -321,6 +332,11 @@ function handleUserSignedOut() {
     if (typeof AppState !== 'undefined') {
         AppState.user = null;
         AppState.isAdmin = false;
+    }
+    
+    // Update admin UI visibility
+    if (typeof updateAdminUI === 'function') {
+        updateAdminUI();
     }
     
     // Remove admin mode
@@ -367,20 +383,40 @@ function updateUIForSignedOutUser() {
 async function checkAdminStatus(userId) {
     try {
         if (isMockMode) {
-            // In mock mode, make demo user an admin for testing
-            return false; // Set to true if you want mock user to be admin
+            // In mock mode, check if user email matches admin email
+            const currentUser = window.mockAuth?.currentUser;
+            const isAdmin = currentUser && currentUser.email === 'cjmin2925@gmail.com';
+            
+            if (isAdmin) {
+                document.body.classList.add('admin-mode');
+                console.log('Admin access granted (mock mode)');
+            }
+            
+            return isAdmin;
         }
         
-        if (!isFirebaseEnabled || !db) {
+        if (!isFirebaseEnabled || !db || !auth.currentUser) {
             return false;
         }
         
+        // Check by email first (primary method)
+        const currentUser = auth.currentUser;
+        if (currentUser.email === 'cjmin2925@gmail.com') {
+            document.body.classList.add('admin-mode');
+            console.log('Admin access granted by email');
+            
+            // Ensure admin document exists
+            await ensureAdminDocument(userId);
+            return true;
+        }
+        
+        // Check admins collection as backup
         const userDoc = await db.collection('admins').doc(userId).get();
         const isAdmin = userDoc.exists;
         
         if (isAdmin) {
             document.body.classList.add('admin-mode');
-            console.log('Admin access granted');
+            console.log('Admin access granted by document');
         }
         
         return isAdmin;
@@ -388,6 +424,25 @@ async function checkAdminStatus(userId) {
     } catch (error) {
         console.error('Error checking admin status:', error);
         return false;
+    }
+}
+
+async function ensureAdminDocument(userId) {
+    if (!isFirebaseEnabled || !db) return;
+    
+    try {
+        const adminDoc = await db.collection('admins').doc(userId).get();
+        if (!adminDoc.exists) {
+            await db.collection('admins').doc(userId).set({
+                email: 'cjmin2925@gmail.com',
+                role: 'super_admin',
+                permissions: ['edit_profile', 'manage_content', 'view_analytics'],
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            console.log('Admin document created');
+        }
+    } catch (error) {
+        console.error('Error ensuring admin document:', error);
     }
 }
 
