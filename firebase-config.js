@@ -23,37 +23,53 @@ function hasValidFirebaseConfig() {
 
 // Initialize Firebase
 function initializeFirebase() {
-    try {
-        if (hasValidFirebaseConfig() && typeof firebase !== 'undefined') {
-            console.log('Initializing Firebase with real config...');
-            
-            // Initialize Firebase app
-            app = firebase.initializeApp(firebaseConfig);
-            auth = firebase.auth();
-            db = firebase.firestore();
-            
-            isFirebaseEnabled = true;
-            isMockMode = false;
-            
-            console.log('Firebase initialized successfully');
-            
-            // Set up authentication state observer
-            setupAuthStateObserver();
-            
-            // Configure Firestore settings
-            configureFirestore();
-            
-            return true;
-        } else {
-            console.log('Firebase not available, switching to mock mode');
+    return new Promise((resolve) => {
+        // Firebase 초기화가 5초 이상 걸리면 오프라인 모드로 강제 전환
+        const initTimeout = setTimeout(() => {
+            console.warn('Firebase initialization timed out. Forcing mock mode.');
             initializeMockMode();
-            return false;
+            resolve(false); // 초기화 실패로 간주
+        }, 5000);
+
+        try {
+            if (hasValidFirebaseConfig() && typeof firebase !== 'undefined') {
+                console.log('Initializing Firebase with real config...');
+                
+                app = firebase.initializeApp(firebaseConfig);
+                auth = firebase.auth();
+                db = firebase.firestore();
+                
+                isFirebaseEnabled = true;
+                isMockMode = false;
+                
+                console.log('Firebase initialized successfully');
+                
+                // Firestore 설정
+                configureFirestore().then(() => {
+                    // 인증 상태 감시자 설정
+                    setupAuthStateObserver();
+                    clearTimeout(initTimeout);
+                    resolve(true); // 초기화 성공
+                }).catch(err => {
+                    console.error("Firestore configuration failed", err);
+                    clearTimeout(initTimeout);
+                    initializeMockMode();
+                    resolve(false);
+                });
+
+            } else {
+                console.log('Firebase SDK not available or config invalid, switching to mock mode');
+                clearTimeout(initTimeout);
+                initializeMockMode();
+                resolve(false);
+            }
+        } catch (error) {
+            console.error('Firebase initialization failed, switching to mock mode:', error);
+            clearTimeout(initTimeout);
+            initializeMockMode();
+            resolve(false);
         }
-    } catch (error) {
-        console.warn('Firebase initialization failed, switching to mock mode:', error);
-        initializeMockMode();
-        return false;
-    }
+    });
 }
 
 // Mock mode initialization
@@ -96,20 +112,22 @@ function setupAuthStateObserver() {
 
 // Configure Firestore settings
 function configureFirestore() {
-    if (!isFirebaseEnabled || !db) return;
+    if (!isFirebaseEnabled || !db) return Promise.resolve();
     
-    try {
-        // Enable offline persistence
-        db.enablePersistence().catch((err) => {
+    // Enable multi-tab offline persistence
+    return db.enablePersistence({ synchronizeTabs: true })
+        .then(() => {
+            console.log('Firestore persistence with tab synchronization enabled.');
+        })
+        .catch((err) => {
             if (err.code === 'failed-precondition') {
-                console.warn('Multiple tabs open, persistence can only be enabled in one tab at a time.');
+                console.warn('Persistence failed: Another tab has exclusive lock. Synchronization will be attempted.');
             } else if (err.code === 'unimplemented') {
-                console.warn('The current browser doesn\'t support persistence.');
+                console.warn('Persistence is not supported in this browser.');
+            } else {
+                console.error("Enable persistence failed:", err);
             }
         });
-    } catch (error) {
-        console.warn('Error setting up Firestore:', error);
-    }
 }
 
 // Authentication functions

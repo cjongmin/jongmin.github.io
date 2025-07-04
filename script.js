@@ -399,51 +399,43 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('App initialization complete');
 });
 
-function initializeApp() {
+async function initializeApp() {
     console.log('Initializing application...');
     
-    // 기본 설정 로드
-    loadPreferences();
-    
-    // 저장된 프로필 데이터 로드
-    loadSavedProfileData();
-    
-    // 모든 데이터 로드
-    loadAllData();
-    
-    // Firebase 상태 감시 (사용 가능한 경우)
-    if (typeof auth !== 'undefined' && auth) {
-        auth.onAuthStateChanged((user) => {
-            if (user) {
-                console.log('User signed in:', user.email);
-                
-                // 관리자 확인
-                if (user.email === 'cjmin2925@gmail.com') {
-                    AppState.isAdmin = true;
-                    console.log('Admin user detected');
-                } else {
-                    AppState.isAdmin = false;
-                }
-                
-                // 관리자 UI 업데이트
-                updateAdminUI();
-                
-            } else {
-                console.log('User signed out');
-                AppState.isAdmin = false;
-                updateAdminUI();
-            }
-        });
-    } else {
-        console.log('Firebase auth not available, running in offline mode');
+    // 로딩 화면 표시
+    const loadingScreen = document.getElementById('loading-screen');
+    if (loadingScreen) {
+        loadingScreen.style.display = 'flex';
+        loadingScreen.style.opacity = '1';
     }
+
+    // Firebase 초기화 시도 (시간 초과 기능 포함)
+    await initializeFirebase();
+    
+    // 기본 설정 및 데이터 로드
+    loadPreferences();
+    loadSavedProfileData();
+    loadAllData();
     
     // 네비게이션 및 이벤트 리스너 설정
     setupNavigationEventListeners();
     setupHeaderEventListeners();
     setupMobileEventListeners();
     
-    console.log('Application initialized successfully');
+    // 초기 섹션 표시
+    showSection('about');
+    
+    // 로딩 화면 숨기기
+    if (loadingScreen) {
+        setTimeout(() => {
+            loadingScreen.style.opacity = '0';
+            setTimeout(() => {
+                loadingScreen.style.display = 'none';
+            }, 500); // Fade-out transition
+        }, 200); // 약간의 딜레이를 주어 콘텐츠가 렌더링될 시간을 확보
+    }
+    
+    console.log(`Application initialized. Firebase Enabled: ${isFirebaseEnabled}, Mock Mode: ${isMockMode}`);
 }
 
 function loadPreferences() {
