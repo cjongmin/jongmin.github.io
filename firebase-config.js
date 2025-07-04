@@ -405,50 +405,36 @@ function updateUIForSignedOutUser() {
 }
 
 async function checkAdminStatus(userId) {
+    // 0. 하드코딩된 관리자 이메일 확인 (가장 먼저)
+    const user = auth.currentUser;
+    if (user && user.email === 'cjmin2925@gmail.com') {
+        console.log('Admin user detected by email.');
+        // 온라인 상태라면 DB에 상태를 기록해준다.
+        if (isFirebaseEnabled && !db.isOffline) {
+            ensureAdminDocument(user.uid).catch(err => console.warn("Could not ensure admin document online:", err));
+        }
+        return true;
+    }
+
+    // 1. Firebase 비활성화 시 mock 데이터 확인
+    if (!isFirebaseEnabled || !db) {
+        return localStorage.getItem('mock_is_admin') === 'true';
+    }
+
+    // 2. Firestore DB 확인 (온라인일 경우)
     try {
-        if (isMockMode) {
-            // In mock mode, check if user email matches admin email
-            const currentUser = window.mockAuth?.currentUser;
-            const isAdmin = currentUser && currentUser.email === 'cjmin2925@gmail.com';
-            
-            if (isAdmin) {
-                document.body.classList.add('admin-mode');
-                console.log('Admin access granted (mock mode)');
-            }
-            
-            return isAdmin;
-        }
-        
-        if (!isFirebaseEnabled || !db || !auth.currentUser) {
-            return false;
-        }
-        
-        // Check by email first (primary method)
-        const currentUser = auth.currentUser;
-        if (currentUser.email === 'cjmin2925@gmail.com') {
-            document.body.classList.add('admin-mode');
-            console.log('Admin access granted by email');
-            
-            // Ensure admin document exists
-            await ensureAdminDocument(userId);
+        const adminDoc = await db.collection('admins').doc(userId).get();
+        if (adminDoc.exists && adminDoc.data().isAdmin) {
+            console.log('User is an administrator (from Firestore).');
             return true;
         }
-        
-        // Check admins collection as backup
-        const userDoc = await db.collection('admins').doc(userId).get();
-        const isAdmin = userDoc.exists;
-        
-        if (isAdmin) {
-            document.body.classList.add('admin-mode');
-            console.log('Admin access granted by document');
-        }
-        
-        return isAdmin;
-        
     } catch (error) {
-        console.error('Error checking admin status:', error);
-        return false;
+        console.error('Error checking admin status from Firestore:', error);
+        // 에러 발생 시 (주로 오프라인), 이메일 체크가 이미 위에서 수행되었으므로 여기서 false를 반환해도 안전.
     }
+
+    console.log('User is not an administrator.');
+    return false;
 }
 
 async function ensureAdminDocument(userId) {

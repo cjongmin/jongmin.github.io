@@ -401,41 +401,44 @@ document.addEventListener('DOMContentLoaded', function() {
 
 async function initializeApp() {
     console.log('Initializing application...');
-    
-    // 로딩 화면 표시
-    const loadingScreen = document.getElementById('loading-screen');
-    if (loadingScreen) {
-        loadingScreen.style.display = 'flex';
-        loadingScreen.style.opacity = '1';
-    }
 
-    // Firebase 초기화 시도 (시간 초과 기능 포함)
-    await initializeFirebase();
-    
-    // 기본 설정 및 데이터 로드
+    const loadingScreen = document.getElementById('loading-screen');
+
+    // 1. 로컬 데이터 우선 로드 및 UI 렌더링
+    console.log('Step 1: Loading local data first...');
     loadPreferences();
     loadSavedProfileData();
-    loadAllData();
-    
-    // 네비게이션 및 이벤트 리스너 설정
+    loadAllData(); // This will now use mock/local data if Firebase isn't ready
+    showSection('about');
     setupNavigationEventListeners();
     setupHeaderEventListeners();
     setupMobileEventListeners();
-    
-    // 초기 섹션 표시
-    showSection('about');
-    
-    // 로딩 화면 숨기기
+    console.log('Initial UI rendered with local data.');
+
+    // 2. 로딩 화면 즉시 숨기기
     if (loadingScreen) {
         setTimeout(() => {
             loadingScreen.style.opacity = '0';
             setTimeout(() => {
                 loadingScreen.style.display = 'none';
-            }, 500); // Fade-out transition
-        }, 200); // 약간의 딜레이를 주어 콘텐츠가 렌더링될 시간을 확보
+            }, 500);
+        }, 100); // Short delay to prevent flash
     }
-    
-    console.log(`Application initialized. Firebase Enabled: ${isFirebaseEnabled}, Mock Mode: ${isMockMode}`);
+    console.log('Step 2: Loading screen hidden.');
+
+    // 3. 백그라운드에서 Firebase 초기화 및 동기화
+    console.log('Step 3: Initializing Firebase in the background...');
+    const firebaseReady = await initializeFirebase();
+
+    if (firebaseReady) {
+        console.log('Firebase is ready. Data will be synchronized.');
+        // Firebase가 준비되면, 데이터를 다시 로드하여 최신 정보로 업데이트 할 수 있습니다.
+        // 예를 들어, loadAllData(); 를 다시 호출하여 Firebase에서 데이터를 가져올 수 있습니다.
+    } else {
+        console.warn('Firebase could not be initialized. App is running in offline/mock mode.');
+    }
+
+    console.log(`Application initialized. Firebase Ready: ${firebaseReady}`);
 }
 
 function loadPreferences() {
