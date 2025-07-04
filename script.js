@@ -813,27 +813,29 @@ function renderPublications() {
     }
 
     const publicationsHTML = AppState.publications.map(pub => {
-        const links = [];
-        if (pub.pdf) links.push(`<a href="${pub.pdf}" target="_blank" class="link-btn pdf">PDF</a>`);
-        if (pub.code) links.push(`<a href="${pub.code}" target="_blank" class="link-btn code">Code</a>`);
-        if (pub.project) links.push(`<a href="${pub.project}" target="_blank" class="link-btn project">Project</a>`);
+        // Correctly access nested link properties
+        const pdfLink = pub.links?.pdf ? `<a href="${pub.links.pdf}" target="_blank" class="link-btn pdf"><i class="fas fa-file-pdf"></i> PDF</a>` : '';
+        const codeLink = pub.links?.code ? `<a href="${pub.links.code}" target="_blank" class="link-btn code"><i class="fas fa-code"></i> Code</a>` : '';
+        const projectLink = pub.links?.project ? `<a href="${pub.links.project}" target="_blank" class="link-btn project"><i class="fas fa-globe"></i> Project</a>` : '';
 
         return `
             <div class="publication-card">
                 <div class="publication-year">${pub.year}</div>
                 <div class="publication-content">
                     <h3 class="publication-title">${pub.title}</h3>
-                    <div class="publication-authors">${pub.authors}</div>
-                    <div class="publication-venue">${pub.venue}</div>
+                    <p class="publication-authors">${pub.authors}</p>
+                    <p class="publication-venue">${pub.venue}</p>
                     <div class="publication-links">
-                        ${links.join('')}
+                        ${pdfLink}
+                        ${codeLink}
+                        ${projectLink}
                     </div>
                 </div>
                 <div class="admin-controls admin-only hidden">
-                    <button class="btn-small btn-primary" onclick="showEditPublicationModal('${pub.id}')">
+                    <button class="btn-small btn-primary" onclick="showEditPublicationModal('${pub.id}')" title="Edit Publication">
                         <i class="fas fa-edit"></i>
                     </button>
-                    <button class="btn-small btn-danger" onclick="deletePublication('${pub.id}')">
+                    <button class="btn-small btn-danger" onclick="deletePublication('${pub.id}')" title="Delete Publication">
                         <i class="fas fa-trash"></i>
                     </button>
                 </div>
@@ -842,24 +844,37 @@ function renderPublications() {
     }).join('');
 
     publicationsList.innerHTML = publicationsHTML;
-    updateAdminUI();
+    updateAdminUI(); // Ensure admin controls are visible if logged in as admin
 }
 
 function loadProjects() {
-    // Sample project data
+    // Sample projects data using placeholder images for reliability
     const sampleProjects = [
         {
-            id: 1,
-            title: "AI-Powered Research Assistant",
-            description: "An intelligent system for helping researchers discover and analyze academic papers.",
-            technologies: ["Python", "TensorFlow", "React", "Firebase"],
-            status: "Active",
-            image: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDMwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIzMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0xMjAgODBMMTUwIDExMEwxODAgODBNMTIwIDEyMEgxODAiIHN0cm9rZT0iIzlDQTNBRiIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KPHN2Zz4K",
-            github: "#",
-            demo: "#"
+            id: 'proj1',
+            title: 'AI-Powered Research Assistant',
+            description: 'An intelligent system for helping researchers discover and analyze academic papers.',
+            image: 'https://via.placeholder.com/400x250/007bff/ffffff?text=Project+1',
+            status: 'Completed',
+            technologies: ['Python', 'TensorFlow', 'React', 'Firebase'],
+            links: {
+                github: '#',
+                demo: '#'
+            }
+        },
+        {
+            id: 'proj2',
+            title: 'Data Analytics Platform',
+            description: 'A comprehensive platform for analyzing and visualizing research data with advanced machine learning capabilities.',
+            image: 'https://via.placeholder.com/400x250/28a745/ffffff?text=Project+2',
+            status: 'In Progress',
+            technologies: ['Python', 'Pandas', 'D3.js', 'PostgreSQL'],
+            links: {
+                github: '#',
+                demo: '#'
+            }
         }
     ];
-    
     AppState.projects = sampleProjects;
     renderProjects();
 }

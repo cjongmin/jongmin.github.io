@@ -132,30 +132,21 @@ function configureFirestore() {
 
 // Authentication functions
 async function loginWithGoogle() {
-    console.log('Google login attempt...');
-    
-    // If Firebase isn't configured at all, show an error.
-    if (!hasValidFirebaseConfig()) {
-        showToast('Firebase is not configured. Cannot log in.', 'error');
+    console.log('Attempting real Google login...');
+
+    if (!hasValidFirebaseConfig() || typeof firebase === 'undefined') {
+        showToast('Firebase is not configured. Cannot perform login.', 'error');
         return;
     }
-    
-    // Even in mock mode, if the user clicks login, try a real login.
-    if (!isFirebaseEnabled || !auth) {
-        showToast('Firebase is initializing, please try again shortly.', 'warning');
-        // Optionally, force re-initialization
-        // await initializeFirebase(); 
-        if (!auth) return; // if still no auth, exit
-    }
-    
+
     try {
         const provider = new firebase.auth.GoogleAuthProvider();
         provider.addScope('profile');
         provider.addScope('email');
         
         const result = await auth.signInWithPopup(provider);
-        console.log('Google login successful:', result.user.email);
-        showToast('Google 로그인 성공!', 'success');
+        // handleUserSignedIn will be called by the onAuthStateChanged observer
+        console.log('Google login successful, auth state change will handle the rest.');
         closeModal('login-modal');
         return result;
         
@@ -164,24 +155,17 @@ async function loginWithGoogle() {
         if (error.code === 'auth/popup-closed-by-user') {
             showToast('로그인 팝업이 닫혔습니다.', 'info');
         } else {
-            showToast('Google 로그인 실패: ' + error.message, 'error');
+            showToast('Google 로그인에 실패했습니다. 다시 시도해주세요.', 'error');
         }
-        throw error;
     }
 }
 
 async function loginWithGitHub() {
-    console.log('GitHub login attempt...');
+    console.log('Attempting real GitHub login...');
 
-    // If Firebase isn't configured at all, show an error.
-    if (!hasValidFirebaseConfig()) {
-        showToast('Firebase is not configured. Cannot log in.', 'error');
+    if (!hasValidFirebaseConfig() || typeof firebase === 'undefined') {
+        showToast('Firebase is not configured. Cannot perform login.', 'error');
         return;
-    }
-    
-    if (!isFirebaseEnabled || !auth) {
-        showToast('Firebase is initializing, please try again shortly.', 'warning');
-        if (!auth) return;
     }
     
     try {
@@ -190,8 +174,8 @@ async function loginWithGitHub() {
         provider.addScope('read:user');
         
         const result = await auth.signInWithPopup(provider);
-        console.log('GitHub login successful:', result.user.email);
-        showToast('GitHub 로그인 성공!', 'success');
+        // handleUserSignedIn will be called by the onAuthStateChanged observer
+        console.log('GitHub login successful, auth state change will handle the rest.');
         closeModal('login-modal');
         return result;
         
@@ -200,9 +184,8 @@ async function loginWithGitHub() {
         if (error.code === 'auth/popup-closed-by-user') {
             showToast('로그인 팝업이 닫혔습니다.', 'info');
         } else {
-            showToast('GitHub 로그인 실패: ' + error.message, 'error');
+            showToast('GitHub 로그인에 실패했습니다. 다시 시도해주세요.', 'error');
         }
-        throw error;
     }
 }
 
@@ -290,27 +273,24 @@ async function logout() {
 
 // Mock authentication functions
 function mockLogin(provider = 'Google') {
-    console.warn(`Performing mock login with provider: ${provider}`);
+    console.warn(`DEPRECATED: mockLogin called with provider: ${provider}. This should not happen during user login.`);
     
     const mockUser = {
         uid: 'mock_user_12345',
-        displayName: 'Demo User',
+        displayName: 'Demo User (Offline)',
         email: 'demo@example.com',
-        photoURL: 'https://via.placeholder.com/150/007bff/ffffff?text=D'
+        photoURL: 'https://via.placeholder.com/150/6c757d/ffffff?text=M'
     };
 
     // Mock 사용자는 절대 관리자가 될 수 없음
-    localStorage.setItem('mock_is_admin', 'false');
-    
-    // handleUserSignedIn 함수를 직접 호출하지 않고, 전역 상태를 업데이트하고 UI를 직접 제어
     AppState.user = mockUser;
     AppState.isLoggedIn = true;
-    AppState.isAdmin = false; // Mock 유저는 관리자가 아님
+    AppState.isAdmin = false; // 명시적으로 false 설정
 
     updateUIForSignedInUser(mockUser);
-    updateAdminUI(); // isAdmin: false 상태로 UI 업데이트
+    updateAdminUI();
 
-    showToast(`Mock login as Demo User.`, 'info');
+    showToast(`Displaying offline demo content.`, 'info');
     closeModal('login-modal');
 }
 
