@@ -8,7 +8,24 @@ const AppState = {
     publications: [],
     projects: [],
     awards: [],
-    timeline: []
+    timeline: [],
+    profileData: null,
+    
+    // 테스트용 관리자 로그인 함수
+    testAdminLogin() {
+        console.log('Test admin login activated');
+        this.isAdmin = true;
+        updateAdminUI();
+        showToast('관리자 모드로 로그인되었습니다 (테스트)', 'success');
+    },
+    
+    // 로그아웃 함수
+    logout() {
+        console.log('Logging out');
+        this.isAdmin = false;
+        updateAdminUI();
+        showToast('로그아웃되었습니다', 'info');
+    }
 };
 
 // Internationalization
@@ -190,61 +207,8 @@ const sectionTemplates = {
         </div>
         
         <div class="projects-section">
-            <h2>Active Projects</h2>
-            <div class="project-card">
-                <div class="project-icon">
-                    <i class="fas fa-robot"></i>
-                </div>
-                <div class="project-content">
-                    <h3>AI-Powered Research Assistant</h3>
-                    <p>An intelligent system for helping researchers discover and analyze academic papers.</p>
-                    <div class="project-technologies">
-                        <span class="tech-tag">Python</span>
-                        <span class="tech-tag">TensorFlow</span>
-                        <span class="tech-tag">React</span>
-                        <span class="tech-tag">Firebase</span>
-                    </div>
-                    <div class="project-links">
-                        <a href="javascript:void(0)" class="project-link" onclick="event.preventDefault()"><i class="fab fa-github"></i> GitHub</a>
-                        <a href="javascript:void(0)" class="project-link" onclick="event.preventDefault()"><i class="fas fa-external-link-alt"></i> Demo</a>
-                    </div>
-                    <div class="admin-controls admin-only hidden">
-                        <button class="btn-small btn-primary" onclick="editProject(1)">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="btn-small btn-danger" onclick="deleteProject(1)">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="project-card">
-                <div class="project-icon">
-                    <i class="fas fa-chart-line"></i>
-                </div>
-                <div class="project-content">
-                    <h3>Data Analytics Platform</h3>
-                    <p>A comprehensive platform for analyzing and visualizing research data with advanced machine learning capabilities.</p>
-                    <div class="project-technologies">
-                        <span class="tech-tag">Python</span>
-                        <span class="tech-tag">Pandas</span>
-                        <span class="tech-tag">D3.js</span>
-                        <span class="tech-tag">PostgreSQL</span>
-                    </div>
-                    <div class="project-links">
-                        <a href="javascript:void(0)" class="project-link" onclick="event.preventDefault()"><i class="fab fa-github"></i> GitHub</a>
-                        <a href="javascript:void(0)" class="project-link" onclick="event.preventDefault()"><i class="fas fa-external-link-alt"></i> Demo</a>
-                    </div>
-                    <div class="admin-controls admin-only hidden">
-                        <button class="btn-small btn-primary" onclick="editProject(2)">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="btn-small btn-danger" onclick="deleteProject(2)">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </div>
-                </div>
+            <div id="projects-grid" class="projects-grid">
+                <!-- Projects will be loaded here with admin controls -->
             </div>
         </div>
     `,
@@ -436,50 +400,50 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function initializeApp() {
-    console.log('Initializing Profile Page Application...');
+    console.log('Initializing application...');
     
-    // Initialize Firebase first
-    if (typeof initializeFirebase === 'function') {
-        initializeFirebase();
-    }
-    
-    // Hide loading screen
-    const loadingScreen = document.getElementById('loading-screen');
-    if (loadingScreen) {
-        setTimeout(() => {
-            loadingScreen.style.opacity = '0';
-            setTimeout(() => {
-                loadingScreen.style.display = 'none';
-            }, 500);
-        }, 1000);
-    }
-    
-    // Load preferences
+    // 기본 설정 로드
     loadPreferences();
     
-    // Load saved profile data
+    // 저장된 프로필 데이터 로드
     loadSavedProfileData();
     
-    // Initialize sections
-    showSection('about');
+    // 모든 데이터 로드
+    loadAllData();
     
-    // Set up event listeners
+    // Firebase 상태 감시 (사용 가능한 경우)
+    if (typeof auth !== 'undefined' && auth) {
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                console.log('User signed in:', user.email);
+                
+                // 관리자 확인
+                if (user.email === 'cjmin2925@gmail.com') {
+                    AppState.isAdmin = true;
+                    console.log('Admin user detected');
+                } else {
+                    AppState.isAdmin = false;
+                }
+                
+                // 관리자 UI 업데이트
+                updateAdminUI();
+                
+            } else {
+                console.log('User signed out');
+                AppState.isAdmin = false;
+                updateAdminUI();
+            }
+        });
+    } else {
+        console.log('Firebase auth not available, running in offline mode');
+    }
+    
+    // 네비게이션 및 이벤트 리스너 설정
     setupNavigationEventListeners();
     setupHeaderEventListeners();
     setupMobileEventListeners();
     
-    // Initialize AI assistant
-    if (typeof aiAssistant !== 'undefined') {
-        console.log('AI Assistant initialized');
-    }
-    
-    // Load all data
-    loadAllData();
-    
-    // Initialize resize functionality
-    initializeAIResize();
-    
-    console.log('Application initialized successfully!');
+    console.log('Application initialized successfully');
 }
 
 function loadPreferences() {
@@ -498,49 +462,91 @@ function loadPreferences() {
 
 function loadSavedProfileData() {
     try {
-        // Load profile data
-        const savedProfile = localStorage.getItem('profile_data');
+        const savedProfile = localStorage.getItem('profileData');
         if (savedProfile) {
             const profileData = JSON.parse(savedProfile);
+            console.log('Loading saved profile data:', profileData);
             
-            const profileName = document.getElementById('profile-name');
-            const profileTitle = document.getElementById('profile-title');
-            const aboutText = document.getElementById('about-text');
+            // 프로필 데이터를 DOM에 적용
+            updateProfileInDOM(profileData);
             
-            if (profileName && profileData.name) {
-                profileName.textContent = profileData.name;
-            }
-            if (profileTitle && profileData.title) {
-                profileTitle.textContent = profileData.title;
-            }
-            if (aboutText && profileData.bio) {
-                aboutText.innerHTML = profileData.bio.split('\n').map(p => `<p>${p}</p>`).join('');
-            }
-            
-            console.log('Profile data loaded from localStorage');
+            // AppState에도 저장
+            AppState.profileData = profileData;
+        } else {
+            console.log('No saved profile data found');
         }
-        
-        // Load profile photo
-        const savedPhoto = localStorage.getItem('profile_photo');
-        if (savedPhoto) {
-            const profileImg = document.getElementById('profile-img');
-            if (profileImg) {
-                profileImg.src = savedPhoto;
-                console.log('Profile photo loaded from localStorage');
-            }
-        }
-        
-        // Check for saved admin status (for page refresh persistence)
-        const savedAdminStatus = localStorage.getItem('is_admin');
-        if (savedAdminStatus === 'true') {
-            AppState.isAdmin = true;
-            document.body.classList.add('admin-mode');
-            updateAdminUI();
-        }
-        
     } catch (error) {
         console.error('Error loading saved profile data:', error);
     }
+}
+
+function updateProfileInDOM(profileData) {
+    // 헤더 프로필 정보 업데이트
+    const profileName = document.querySelector('.profile-name');
+    const profileTitle = document.querySelector('.profile-title');
+    const profileBio = document.querySelector('.profile-bio');
+    
+    if (profileName && profileData.name) {
+        profileName.textContent = profileData.name;
+    }
+    
+    if (profileTitle && profileData.title) {
+        profileTitle.textContent = profileData.title;
+    }
+    
+    if (profileBio && profileData.bio) {
+        profileBio.textContent = profileData.bio;
+    }
+    
+    // About 섹션의 모든 프로필 요소 업데이트
+    const aboutNameElements = document.querySelectorAll('.about-name, h1[data-i18n="name"]');
+    const aboutTitleElements = document.querySelectorAll('.about-title, .current-position');
+    const aboutBioElements = document.querySelectorAll('.about-bio, .bio-content');
+    
+    aboutNameElements.forEach(el => {
+        if (profileData.name) el.textContent = profileData.name;
+    });
+    
+    aboutTitleElements.forEach(el => {
+        if (profileData.title) el.textContent = profileData.title;
+    });
+    
+    aboutBioElements.forEach(el => {
+        if (profileData.bio) el.textContent = profileData.bio;
+    });
+    
+    // 연구 관심사 업데이트
+    if (profileData.research_interests) {
+        const researchSection = document.querySelector('.research-interests-content, .interests-list');
+        if (researchSection) {
+            if (Array.isArray(profileData.research_interests)) {
+                researchSection.innerHTML = profileData.research_interests
+                    .map(interest => `<span class="interest-tag">${interest}</span>`)
+                    .join('');
+            } else {
+                researchSection.textContent = profileData.research_interests;
+            }
+        }
+    }
+    
+    // 학력 정보 업데이트
+    if (profileData.education) {
+        const educationSection = document.querySelector('.education-content, .education-list');
+        if (educationSection) {
+            if (Array.isArray(profileData.education)) {
+                educationSection.innerHTML = profileData.education
+                    .map(edu => `<div class="education-item">
+                        <h4>${edu.degree}</h4>
+                        <p>${edu.institution} (${edu.year})</p>
+                    </div>`)
+                    .join('');
+            } else {
+                educationSection.textContent = profileData.education;
+            }
+        }
+    }
+    
+    console.log('Profile data applied to DOM');
 }
 
 function showSection(sectionName) {
@@ -805,33 +811,43 @@ function loadPublications() {
 function renderPublications() {
     const publicationsList = document.getElementById('publications-list');
     if (!publicationsList) return;
-    
+
     if (AppState.publications.length === 0) {
         publicationsList.innerHTML = '<p class="no-data">No publications found.</p>';
         return;
     }
-    
-    const publicationsHTML = AppState.publications.map(pub => `
-        <div class="publication-card">
-            <div class="publication-header">
-                <h3 class="publication-title">${pub.title}</h3>
+
+    const publicationsHTML = AppState.publications.map(pub => {
+        const links = [];
+        if (pub.pdf) links.push(`<a href="${pub.pdf}" target="_blank" class="link-btn pdf">PDF</a>`);
+        if (pub.code) links.push(`<a href="${pub.code}" target="_blank" class="link-btn code">Code</a>`);
+        if (pub.project) links.push(`<a href="${pub.project}" target="_blank" class="link-btn project">Project</a>`);
+
+        return `
+            <div class="publication-card">
                 <div class="publication-year">${pub.year}</div>
+                <div class="publication-content">
+                    <h3 class="publication-title">${pub.title}</h3>
+                    <div class="publication-authors">${pub.authors}</div>
+                    <div class="publication-venue">${pub.venue}</div>
+                    <div class="publication-links">
+                        ${links.join('')}
+                    </div>
+                </div>
+                <div class="admin-controls admin-only hidden">
+                    <button class="btn-small btn-primary" onclick="showEditPublicationModal('${pub.id}')">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn-small btn-danger" onclick="deletePublication('${pub.id}')">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
             </div>
-            <div class="publication-authors">${pub.authors}</div>
-            <div class="publication-venue">${pub.venue}</div>
-            <div class="publication-abstract">${pub.abstract}</div>
-            <div class="publication-links">
-                ${pub.links.pdf ? `<a href="${pub.links.pdf}" class="pub-link pdf"><i class="fas fa-file-pdf"></i> PDF</a>` : ''}
-                ${pub.links.code ? `<a href="${pub.links.code}" class="pub-link code"><i class="fas fa-code"></i> Code</a>` : ''}
-                ${pub.links.project ? `<a href="${pub.links.project}" class="pub-link project"><i class="fas fa-external-link-alt"></i> Project</a>` : ''}
-            </div>
-            <div class="publication-stats">
-                <span class="citations">Citations: ${pub.citations}</span>
-            </div>
-        </div>
-    `).join('');
-    
+        `;
+    }).join('');
+
     publicationsList.innerHTML = publicationsHTML;
+    updateAdminUI();
 }
 
 function loadProjects() {
@@ -856,33 +872,42 @@ function loadProjects() {
 function renderProjects() {
     const projectsGrid = document.getElementById('projects-grid');
     if (!projectsGrid) return;
-    
+
     if (AppState.projects.length === 0) {
         projectsGrid.innerHTML = '<p class="no-data">No projects found.</p>';
         return;
     }
-    
+
     const projectsHTML = AppState.projects.map(project => `
         <div class="project-card">
             <div class="project-image">
-                <img src="${project.image}" alt="${project.title}">
-                <div class="project-status status-${project.status.toLowerCase()}">${project.status}</div>
+                <img src="${project.image || 'https://via.placeholder.com/300x200'}" alt="${project.title}">
+                <div class="project-status status-${project.status?.toLowerCase() || 'active'}">${project.status || 'Active'}</div>
             </div>
             <div class="project-content">
                 <h3 class="project-title">${project.title}</h3>
                 <p class="project-description">${project.description}</p>
                 <div class="project-technologies">
-                    ${project.technologies.map(tech => `<span class="tech-tag">${tech}</span>`).join('')}
+                    ${(project.technologies || []).map(tech => `<span class="tech-tag">${tech}</span>`).join('')}
                 </div>
                 <div class="project-links">
-                    ${project.github ? `<a href="${project.github}" class="project-link"><i class="fab fa-github"></i> GitHub</a>` : ''}
-                    ${project.demo ? `<a href="${project.demo}" class="project-link"><i class="fas fa-external-link-alt"></i> Demo</a>` : ''}
+                    ${project.links?.github ? `<a href="${project.links.github}" class="project-link"><i class="fab fa-github"></i> GitHub</a>` : ''}
+                    ${project.links?.demo ? `<a href="${project.links.demo}" class="project-link"><i class="fas fa-external-link-alt"></i> Demo</a>` : ''}
+                </div>
+                <div class="admin-controls admin-only hidden">
+                    <button class="btn-small btn-primary" onclick="editProject('${project.id}')">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn-small btn-danger" onclick="deleteProject('${project.id}')">
+                        <i class="fas fa-trash"></i>
+                    </button>
                 </div>
             </div>
         </div>
     `).join('');
-    
+
     projectsGrid.innerHTML = projectsHTML;
+    updateAdminUI();
 }
 
 function loadAwards() {
@@ -1018,82 +1043,163 @@ function handleContactForm(event) {
 function handleFeedbackForm(event) {
     event.preventDefault();
     
-    // 로그인 확인
-    if (!auth.currentUser) {
-        showToast('피드백을 남기려면 로그인이 필요합니다.', 'error');
-        showLoginModal();
-        return;
-    }
-    
     const rating = document.querySelector('.rating-stars .active')?.dataset?.rating || 0;
-    const comment = document.getElementById('feedback-comment').value;
+    const comment = document.getElementById('feedback-comment').value?.trim() || '';
     
     if (!rating) {
         showToast('평점을 선택해주세요.', 'error');
         return;
     }
     
+    // 사용자 정보 가져오기 (로그인된 경우 Firebase, 아니면 기본값)
+    let userName = 'Anonymous';
+    let userEmail = '';
+    let userId = `anonymous_${Date.now()}`;
+    
+    if (typeof auth !== 'undefined' && auth.currentUser) {
+        userName = auth.currentUser.displayName || auth.currentUser.email || 'Logged User';
+        userEmail = auth.currentUser.email || '';
+        userId = auth.currentUser.uid;
+    } else {
+        // 로그인하지 않은 경우에도 피드백 허용
+        userName = 'Anonymous User';
+    }
+    
     const feedbackData = {
-        userId: auth.currentUser.uid,
-        userName: auth.currentUser.displayName || 'Anonymous',
-        userEmail: auth.currentUser.email,
+        id: `feedback_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        userId: userId,
+        userName: userName,
+        userEmail: userEmail,
         rating: parseInt(rating),
         comment: comment,
-        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+        timestamp: new Date().toISOString(),
         createdAt: new Date().toISOString()
     };
     
-    // Firebase에 저장
-    db.collection('feedback').add(feedbackData)
-        .then(() => {
-            showToast('피드백이 성공적으로 등록되었습니다!', 'success');
-            document.getElementById('feedback-form').reset();
-            resetRating();
-            loadFeedback(); // 피드백 목록 새로고침
-        })
-        .catch((error) => {
-            console.error('Error adding feedback:', error);
-            showToast('피드백 등록에 실패했습니다.', 'error');
-        });
+    console.log('Saving feedback:', feedbackData);
+    
+    // localStorage에 피드백 저장
+    try {
+        let savedFeedbacks = [];
+        const existingFeedbacks = localStorage.getItem('feedbacks');
+        if (existingFeedbacks) {
+            savedFeedbacks = JSON.parse(existingFeedbacks);
+        }
+        
+        savedFeedbacks.unshift(feedbackData); // 최신 피드백을 앞에 추가
+        
+        // 최대 50개의 피드백만 보관
+        if (savedFeedbacks.length > 50) {
+            savedFeedbacks = savedFeedbacks.slice(0, 50);
+        }
+        
+        localStorage.setItem('feedbacks', JSON.stringify(savedFeedbacks));
+        console.log('Feedback saved to localStorage');
+        
+        // Firebase에도 저장 시도 (가능한 경우)
+        if (typeof db !== 'undefined' && db) {
+            db.collection('feedback').add(feedbackData)
+                .then(() => {
+                    console.log('Feedback also saved to Firebase');
+                })
+                .catch((error) => {
+                    console.log('Firebase save failed, but localStorage save succeeded:', error);
+                });
+        }
+        
+        // 성공 메시지 및 폼 리셋
+        showToast('피드백이 성공적으로 등록되었습니다!', 'success');
+        document.getElementById('feedback-form').reset();
+        resetRating();
+        loadFeedback(); // 피드백 목록 새로고침
+        
+    } catch (error) {
+        console.error('Error saving feedback:', error);
+        showToast('피드백 저장에 실패했습니다. 다시 시도해주세요.', 'error');
+    }
 }
 
-// Load feedback from Firebase
+// Load feedback from localStorage (and Firebase if available)
 async function loadFeedback() {
     try {
         const feedbackList = document.getElementById('feedback-list');
         if (!feedbackList) return;
         
-        const snapshot = await db.collection('feedback')
-            .orderBy('timestamp', 'desc')
-            .limit(10)
-            .get();
+        let allFeedbacks = [];
         
-        if (snapshot.empty) {
+        // localStorage에서 피드백 로드
+        try {
+            const savedFeedbacks = localStorage.getItem('feedbacks');
+            if (savedFeedbacks) {
+                const localFeedbacks = JSON.parse(savedFeedbacks);
+                allFeedbacks = [...localFeedbacks];
+                console.log('Loaded feedbacks from localStorage:', localFeedbacks.length);
+            }
+        } catch (error) {
+            console.error('Error loading from localStorage:', error);
+        }
+        
+        // Firebase에서도 로드 시도 (가능한 경우)
+        if (typeof db !== 'undefined' && db) {
+            try {
+                const snapshot = await db.collection('feedback')
+                    .orderBy('timestamp', 'desc')
+                    .limit(20)
+                    .get();
+                
+                const firebaseFeedbacks = snapshot.docs.map(doc => {
+                    const data = doc.data();
+                    return {
+                        ...data,
+                        id: doc.id,
+                        createdAt: data.timestamp ? data.timestamp.toDate().toISOString() : data.createdAt
+                    };
+                });
+                
+                // Firebase 피드백과 localStorage 피드백 병합 (중복 제거)
+                const combinedFeedbacks = [...allFeedbacks];
+                firebaseFeedbacks.forEach(fbFeedback => {
+                    if (!combinedFeedbacks.find(f => f.id === fbFeedback.id)) {
+                        combinedFeedbacks.push(fbFeedback);
+                    }
+                });
+                
+                allFeedbacks = combinedFeedbacks;
+                console.log('Combined feedbacks from Firebase and localStorage:', allFeedbacks.length);
+            } catch (error) {
+                console.log('Firebase loading failed, using localStorage only:', error);
+            }
+        }
+        
+        // 날짜순으로 정렬
+        allFeedbacks.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        
+        if (allFeedbacks.length === 0) {
             feedbackList.innerHTML = '<p class="no-feedback">아직 피드백이 없습니다. 첫 번째 피드백을 남겨주세요!</p>';
             return;
         }
         
-        const feedbackHTML = snapshot.docs.map(doc => {
-            const data = doc.data();
-            const createdAt = data.timestamp ? data.timestamp.toDate() : new Date(data.createdAt);
+        const feedbackHTML = allFeedbacks.slice(0, 10).map(feedback => {
+            const createdAt = new Date(feedback.createdAt);
             
             return `
                 <div class="feedback-item">
                     <div class="feedback-header">
                         <div class="feedback-user">
-                            <strong>${data.userName}</strong>
+                            <strong>${feedback.userName}</strong>
                         </div>
                         <div class="feedback-rating">
-                            ${generateStarRating(data.rating)}
+                            ${generateStarRating(feedback.rating)}
                         </div>
                     </div>
                     <div class="feedback-time">${formatDate(createdAt)}</div>
-                    <div class="feedback-comment">${data.comment || '(코멘트 없음)'}</div>
+                    <div class="feedback-comment">${feedback.comment || '(코멘트 없음)'}</div>
                 </div>
             `;
         }).join('');
         
         feedbackList.innerHTML = feedbackHTML;
+        console.log('Feedback list rendered with', allFeedbacks.length, 'items');
         
     } catch (error) {
         console.error('Error loading feedback:', error);
@@ -1339,45 +1445,114 @@ function setupNavigationEventListeners() {
 
 // Header controls event listeners
 function setupHeaderEventListeners() {
-    // Theme toggle button
-    const themeBtn = document.getElementById('theme-btn');
-    if (themeBtn) {
-        themeBtn.addEventListener('click', toggleTheme);
+    // Theme toggle
+    const themeToggle = document.getElementById('theme-toggle');
+    if (themeToggle) {
+        themeToggle.addEventListener('click', toggleTheme);
     }
-    
-    // Language toggle button
-    const langBtn = document.getElementById('lang-btn');
-    if (langBtn) {
-        langBtn.addEventListener('click', toggleLanguage);
+
+    // Language toggle  
+    const langToggle = document.getElementById('lang-toggle');
+    if (langToggle) {
+        langToggle.addEventListener('click', toggleLanguage);
     }
-    
-    // Login button (if not already handled by firebase-config.js)
+
+    // Mobile menu
+    const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
+    if (mobileMenuToggle) {
+        mobileMenuToggle.addEventListener('click', toggleMobileMenu);
+    }
+
+    // AI Panel toggle
+    const aiToggle = document.getElementById('ai-toggle');
+    if (aiToggle) {
+        aiToggle.addEventListener('click', toggleAIPanel);
+    }
+
+    // Search functionality
+    const searchInput = document.getElementById('search-input');
+    if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+            // Search functionality to be implemented
+            console.log('Search:', e.target.value);
+        });
+    }
+
+    // Login/Logout button
     const loginBtn = document.getElementById('login-btn');
-    if (loginBtn && !loginBtn.hasAttribute('data-listener-added')) {
-        loginBtn.addEventListener('click', function() {
-            // This will be handled by firebase-config.js mock login
-            if (typeof mockLogin === 'function') {
-                mockLogin('google');
+    if (loginBtn) {
+        loginBtn.addEventListener('click', () => {
+            if (AppState.isLoggedIn) {
+                // Logout functionality
+                if (typeof auth !== 'undefined' && auth.currentUser) {
+                    auth.signOut();
+                }
             } else {
                 showLoginModal();
             }
         });
-        loginBtn.setAttribute('data-listener-added', 'true');
+    }
+
+    // Contact form
+    const contactForm = document.getElementById('contact-form');
+    if (contactForm) {
+        contactForm.addEventListener('submit', handleContactForm);
+    }
+
+    // Feedback form
+    const feedbackForm = document.getElementById('feedback-form');
+    if (feedbackForm) {
+        feedbackForm.addEventListener('submit', handleFeedbackForm);
     }
     
-    // Logout button (if not already handled by firebase-config.js)
-    const logoutBtn = document.getElementById('logout-btn');
-    if (logoutBtn && !logoutBtn.hasAttribute('data-listener-added')) {
-        logoutBtn.addEventListener('click', function() {
-            // This will be handled by firebase-config.js mock logout
-            if (typeof mockLogout === 'function') {
-                mockLogout();
-            }
+    // 별점 클릭 이벤트 설정
+    const ratingStars = document.querySelectorAll('.rating-stars i');
+    ratingStars.forEach((star, index) => {
+        star.addEventListener('click', () => {
+            setRating(index + 1);
+            star.dataset.rating = index + 1;
+            // 클릭된 별에 active 표시
+            ratingStars.forEach((s, i) => {
+                if (i <= index) {
+                    s.classList.add('active');
+                } else {
+                    s.classList.remove('active');
+                }
+            });
         });
-        logoutBtn.setAttribute('data-listener-added', 'true');
+        
+        star.addEventListener('mouseover', () => {
+            ratingStars.forEach((s, i) => {
+                if (i <= index) {
+                    s.classList.add('hover');
+                } else {
+                    s.classList.remove('hover');
+                }
+            });
+        });
+        
+        star.addEventListener('mouseout', () => {
+            ratingStars.forEach(s => s.classList.remove('hover'));
+        });
+    });
+
+    // Collaboration form
+    const collaborationForm = document.getElementById('collaboration-form');
+    if (collaborationForm) {
+        collaborationForm.addEventListener('submit', handleCollaborationForm);
+    }
+
+    // Publication search and filter
+    const pubSearch = document.getElementById('pub-search');
+    const pubFilter = document.getElementById('pub-filter');
+    
+    if (pubSearch) {
+        pubSearch.addEventListener('input', filterPublications);
     }
     
-    console.log('Header event listeners set up');
+    if (pubFilter) {
+        pubFilter.addEventListener('change', filterPublications);
+    }
 }
 
 // Mobile event listeners
@@ -1508,42 +1683,45 @@ function showProfileEditModal() {
         return;
     }
     
+    // 기존 저장된 데이터 가져오기
+    const currentProfile = AppState.profileData || {};
+    
+    const modalId = 'profile-edit-modal';
+    const existingModal = document.getElementById(modalId);
+    if (existingModal) existingModal.remove();
+
     const modalHTML = `
-        <div id="profile-edit-modal" class="modal">
+        <div id="${modalId}" class="modal">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h2 data-i18n="edit_profile">프로필 편집</h2>
-                    <button class="modal-close" onclick="closeModal('profile-edit-modal')">
-                        <i class="fas fa-times"></i>
-                    </button>
+                    <h2>프로필 편집</h2>
+                    <button class="modal-close" onclick="closeModal('${modalId}')"><i class="fas fa-times"></i></button>
                 </div>
                 <div class="modal-body">
                     <form id="profile-edit-form" onsubmit="handleProfileEdit(event)">
                         <div class="form-group">
-                            <label for="profile-name-edit" data-i18n="name">이름</label>
-                            <input type="text" id="profile-name-edit" 
-                                   value="${document.getElementById('profile-name')?.textContent || 'Dr. [Your Name]'}" required>
+                            <label for="edit-name">이름</label>
+                            <input type="text" id="edit-name" value="${currentProfile.name || ''}" required>
                         </div>
-                        
                         <div class="form-group">
-                            <label for="profile-title-edit" data-i18n="title">직책</label>
-                            <input type="text" id="profile-title-edit" 
-                                   value="${document.getElementById('profile-title')?.textContent || 'AI Researcher & Data Scientist'}" required>
+                            <label for="edit-title">직책/직함</label>
+                            <input type="text" id="edit-title" value="${currentProfile.title || ''}" required>
                         </div>
-                        
                         <div class="form-group">
-                            <label for="profile-bio-edit" data-i18n="bio">소개</label>
-                            <textarea id="profile-bio-edit" rows="4" placeholder="자신에 대한 간단한 소개를 작성하세요...">${document.getElementById('about-text')?.textContent || ''}</textarea>
+                            <label for="edit-bio">소개</label>
+                            <textarea id="edit-bio" rows="4" required>${currentProfile.bio || ''}</textarea>
                         </div>
-                        
+                        <div class="form-group">
+                            <label for="edit-research-interests">연구 관심사</label>
+                            <textarea id="edit-research-interests" rows="3" placeholder="연구 관심사를 입력하세요">${currentProfile.research_interests || ''}</textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-education">학력</label>
+                            <textarea id="edit-education" rows="4" placeholder="학력 정보를 입력하세요">${currentProfile.education || ''}</textarea>
+                        </div>
                         <div class="form-actions">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-save"></i>
-                                <span data-i18n="save">저장</span>
-                            </button>
-                            <button type="button" class="btn btn-secondary" onclick="closeModal('profile-edit-modal')">
-                                <span data-i18n="cancel">취소</span>
-                            </button>
+                            <button type="submit" class="btn btn-primary">저장</button>
+                            <button type="button" class="btn btn-secondary" onclick="closeModal('${modalId}')">취소</button>
                         </div>
                     </form>
                 </div>
@@ -1552,8 +1730,7 @@ function showProfileEditModal() {
     `;
     
     document.body.insertAdjacentHTML('beforeend', modalHTML);
-    updateLanguage();
-    showModal('profile-edit-modal');
+    showModal(modalId);
 }
 
 function showProfilePhotoModal() {
@@ -1622,37 +1799,39 @@ function showProfilePhotoModal() {
 
 function handleProfileEdit(event) {
     event.preventDefault();
+    if (!AppState.isAdmin) return;
+
+    const profileData = {
+        name: document.getElementById('edit-name').value,
+        title: document.getElementById('edit-title').value,
+        bio: document.getElementById('edit-bio').value,
+        research_interests: document.getElementById('edit-research-interests').value,
+        education: document.getElementById('edit-education').value
+    };
     
-    if (!AppState.isAdmin) {
-        showToast('관리자만 접근할 수 있습니다.', 'error');
+    console.log('Saving profile data:', profileData);
+    
+    // localStorage에 저장
+    try {
+        localStorage.setItem('profileData', JSON.stringify(profileData));
+        console.log('Profile data saved to localStorage');
+    } catch (error) {
+        console.error('Error saving profile data:', error);
+        showToast('프로필 저장 중 오류가 발생했습니다.', 'error');
         return;
     }
     
-    const name = document.getElementById('profile-name-edit').value.trim();
-    const title = document.getElementById('profile-title-edit').value.trim();
-    const bio = document.getElementById('profile-bio-edit').value.trim();
+    // DOM에 즉시 적용
+    updateProfileInDOM(profileData);
     
-    // Update profile information
-    const profileName = document.getElementById('profile-name');
-    const profileTitle = document.getElementById('profile-title');
-    const aboutText = document.getElementById('about-text');
+    // AppState 업데이트
+    AppState.profileData = profileData;
     
-    if (profileName) profileName.textContent = name;
-    if (profileTitle) profileTitle.textContent = title;
-    if (aboutText && bio) {
-        aboutText.innerHTML = bio.split('\\n').map(p => `<p>${p}</p>`).join('');
-    }
-    
-    // Save to localStorage
-    localStorage.setItem('profile_data', JSON.stringify({
-        name: name,
-        title: title,
-        bio: bio,
-        updated: new Date().toISOString()
-    }));
-    
-    showToast('프로필이 업데이트되었습니다.');
+    // 모달 닫기
     closeModal('profile-edit-modal');
+    
+    // 성공 메시지
+    showToast('프로필이 성공적으로 저장되었습니다!', 'success');
 }
 
 function previewPhoto(event) {
@@ -1730,15 +1909,133 @@ function deleteProfilePhoto() {
 
 // Content management functions (admin only)
 function editResearchInterests() {
-    if (!AppState.isAdmin) return;
+    if (!AppState.isAdmin) {
+        showToast('관리자만 접근할 수 있습니다.', 'error');
+        return;
+    }
     
-    showToast('연구 관심사 편집 기능이 곧 제공됩니다.', 'info');
+    // 현재 저장된 데이터 가져오기
+    const currentData = AppState.profileData?.research_interests || '';
+    
+    const modalId = 'research-interests-modal';
+    const existingModal = document.getElementById(modalId);
+    if (existingModal) existingModal.remove();
+
+    const modalHTML = `
+        <div id="${modalId}" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>연구 관심사 편집</h2>
+                    <button class="modal-close" onclick="closeModal('${modalId}')"><i class="fas fa-times"></i></button>
+                </div>
+                <div class="modal-body">
+                    <form id="research-interests-form" onsubmit="handleSaveResearchInterests(event)">
+                        <div class="form-group">
+                            <label>연구 관심사</label>
+                            <textarea id="research-interests-input" rows="6" placeholder="연구 관심사를 입력하세요. 여러 항목은 쉼표로 구분하세요.">${currentData}</textarea>
+                            <small>예: Machine Learning, Natural Language Processing, Computer Vision</small>
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">저장</button>
+                            <button type="button" class="btn btn-secondary" onclick="closeModal('${modalId}')">취소</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    showModal(modalId);
+}
+
+function handleSaveResearchInterests(event) {
+    event.preventDefault();
+    if (!AppState.isAdmin) return;
+
+    const researchInterests = document.getElementById('research-interests-input').value.trim();
+    
+    // 현재 프로필 데이터 가져오기 또는 초기화
+    const currentProfile = AppState.profileData || {};
+    
+    // 연구 관심사 업데이트
+    currentProfile.research_interests = researchInterests;
+    
+    // AppState와 localStorage에 저장
+    AppState.profileData = currentProfile;
+    localStorage.setItem('profileData', JSON.stringify(currentProfile));
+    
+    // DOM 업데이트
+    updateProfileInDOM(currentProfile);
+    
+    closeModal('research-interests-modal');
+    showToast('연구 관심사가 성공적으로 저장되었습니다!', 'success');
 }
 
 function editEducation() {
-    if (!AppState.isAdmin) return;
+    if (!AppState.isAdmin) {
+        showToast('관리자만 접근할 수 있습니다.', 'error');
+        return;
+    }
     
-    showToast('학력 편집 기능이 곧 제공됩니다.', 'info');
+    // 현재 저장된 데이터 가져오기
+    const currentData = AppState.profileData?.education || '';
+    
+    const modalId = 'education-modal';
+    const existingModal = document.getElementById(modalId);
+    if (existingModal) existingModal.remove();
+
+    const modalHTML = `
+        <div id="${modalId}" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>학력 편집</h2>
+                    <button class="modal-close" onclick="closeModal('${modalId}')"><i class="fas fa-times"></i></button>
+                </div>
+                <div class="modal-body">
+                    <form id="education-form" onsubmit="handleSaveEducation(event)">
+                        <div class="form-group">
+                            <label>학력 정보</label>
+                            <textarea id="education-input" rows="8" placeholder="학력 정보를 입력하세요. 각 학위는 새 줄로 구분하세요.">${currentData}</textarea>
+                            <small>예:<br/>
+                            Ph.D. in Computer Science, KAIST (2020)<br/>
+                            M.S. in Computer Science, Seoul National University (2016)<br/>
+                            B.S. in Computer Science, Yonsei University (2014)
+                            </small>
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">저장</button>
+                            <button type="button" class="btn btn-secondary" onclick="closeModal('${modalId}')">취소</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    showModal(modalId);
+}
+
+function handleSaveEducation(event) {
+    event.preventDefault();
+    if (!AppState.isAdmin) return;
+
+    const education = document.getElementById('education-input').value.trim();
+    
+    // 현재 프로필 데이터 가져오기 또는 초기화
+    const currentProfile = AppState.profileData || {};
+    
+    // 학력 정보 업데이트
+    currentProfile.education = education;
+    
+    // AppState와 localStorage에 저장
+    AppState.profileData = currentProfile;
+    localStorage.setItem('profileData', JSON.stringify(currentProfile));
+    
+    // DOM 업데이트
+    updateProfileInDOM(currentProfile);
+    
+    closeModal('education-modal');
+    showToast('학력 정보가 성공적으로 저장되었습니다!', 'success');
 }
 
 function editProject(projectId) {
@@ -1852,15 +2149,97 @@ function handleSaveProject(event, projectId) {
 }
 
 function showAddAwardModal() {
-    if (!AppState.isAdmin) return;
-    
-    showToast('수상 내역 추가 기능이 곧 제공됩니다.', 'info');
+    if (!AppState.isAdmin) {
+        showToast('관리자만 접근할 수 있습니다.', 'error');
+        return;
+    }
+    showAwardModal(null);
 }
 
 function showAddTimelineModal() {
+    if (!AppState.isAdmin) {
+        showToast('관리자만 접근할 수 있습니다.', 'error');
+        return;
+    }
+    showTimelineModal(null);
+}
+
+function showTimelineModal(event) {
+    const modalId = 'timeline-modal';
+    const existingModal = document.getElementById(modalId);
+    if (existingModal) existingModal.remove();
+
+    const title = event ? 'Edit Timeline Event' : 'Add Timeline Event';
+    const modalHTML = `
+        <div id="${modalId}" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>${title}</h2>
+                    <button class="modal-close" onclick="closeModal('${modalId}')"><i class="fas fa-times"></i></button>
+                </div>
+                <div class="modal-body">
+                    <form id="timeline-form" onsubmit="handleSaveTimeline(event, '${event?.id || ''}')">
+                        <div class="form-group">
+                            <label>Year</label>
+                            <input type="text" id="timeline-year" value="${event?.year || new Date().getFullYear()}" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Title</label>
+                            <input type="text" id="timeline-title" value="${event?.title || ''}" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Description</label>
+                            <textarea id="timeline-description" rows="3" required>${event?.description || ''}</textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Icon (Font Awesome)</label>
+                            <input type="text" id="timeline-icon" value="${event?.icon || 'calendar'}">
+                            <small>e.g., briefcase, graduation-cap, university, trophy</small>
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">Save</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    showModal(modalId);
+}
+
+function handleSaveTimeline(event, eventId) {
+    event.preventDefault();
     if (!AppState.isAdmin) return;
-    
-    showToast('타임라인 추가 기능이 곧 제공됩니다.', 'info');
+
+    const timelineEvent = {
+        id: eventId || `timeline_${new Date().getTime()}`,
+        year: document.getElementById('timeline-year').value,
+        title: document.getElementById('timeline-title').value,
+        description: document.getElementById('timeline-description').value,
+        icon: document.getElementById('timeline-icon').value,
+    };
+
+    if (eventId) {
+        // Edit existing
+        const index = AppState.timeline.findIndex(t => t.id === eventId);
+        AppState.timeline[index] = timelineEvent;
+    } else {
+        // Add new
+        AppState.timeline.unshift(timelineEvent);
+    }
+
+    renderTimeline();
+    closeModal('timeline-modal');
+    showToast('Timeline event saved successfully.');
+}
+
+function editTimeline(eventId) {
+    if (!AppState.isAdmin) return;
+    const event = AppState.timeline.find(t => t.id === eventId);
+    if (event) {
+        showTimelineModal(event);
+    }
 }
 
 // Admin UI visibility control
@@ -2051,7 +2430,10 @@ function renderTimeline() {
 
 function editTimeline(eventId) {
     if (!AppState.isAdmin) return;
-    showToast('타임라인 편집 기능이 곧 제공됩니다.', 'info');
+    const event = AppState.timeline.find(t => t.id === eventId);
+    if (event) {
+        showTimelineModal(event);
+    }
 }
 
 function deleteTimeline(eventId) {
