@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Research Profile - AI Researcher & Data Scientist</title>
+    <title>Dr. [Your Name] - Researcher Profile</title>
     <meta name="description" content="연구자 개인 프로필 페이지 - AI, Machine Learning, Data Science">
     
     <!-- Fonts -->
@@ -17,10 +17,10 @@
     
     <!-- External Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <!-- Custom Styles -->
-    <link rel="stylesheet" href="css/main.css">
-    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <!-- Loading Screen -->
@@ -52,14 +52,14 @@
                 </div>
                 
                 <div class="auth-section">
-                    <button id="login-btn" class="login-btn">
+                    <button id="login-btn" onclick="showLoginModal()" class="login-btn">
                         <i class="fas fa-sign-in-alt"></i>
                         <span data-i18n="login">로그인</span>
                     </button>
                     <div id="user-menu" class="user-menu hidden">
                         <img id="user-avatar" src="" alt="User Avatar" class="user-avatar">
                         <div class="user-dropdown">
-                            <button onclick="showAdminPanel()" data-i18n="admin_panel" class="admin-only">관리자 패널</button>
+                            <button onclick="showAdminPanel()" data-i18n="admin_panel">관리자 패널</button>
                             <button onclick="showSettings()" data-i18n="settings">설정</button>
                             <button onclick="logout()" data-i18n="logout">로그아웃</button>
                         </div>
@@ -100,50 +100,50 @@
                 <div class="navigation">
                     <ul class="nav-menu">
                         <li class="nav-item active">
-                            <a href="#about">
+                            <a href="#about" onclick="showSection('about')">
                                 <i class="fas fa-user"></i>
                                 <span data-i18n="about">About Me</span>
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="#publications">
+                            <a href="#publications" onclick="showSection('publications')">
                                 <i class="fas fa-file-alt"></i>
                                 <span data-i18n="publications">Publications</span>
                                 <span class="nav-badge" id="pub-badge">0</span>
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="#projects">
+                            <a href="#projects" onclick="showSection('projects')">
                                 <i class="fas fa-project-diagram"></i>
                                 <span data-i18n="projects">Projects</span>
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="#awards">
+                            <a href="#awards" onclick="showSection('awards')">
                                 <i class="fas fa-trophy"></i>
                                 <span data-i18n="awards">Awards</span>
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="#timeline">
+                            <a href="#timeline" onclick="showSection('timeline')">
                                 <i class="fas fa-clock"></i>
                                 <span data-i18n="timeline">Timeline</span>
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="#contact">
+                            <a href="#contact" onclick="showSection('contact')">
                                 <i class="fas fa-envelope"></i>
                                 <span data-i18n="contact">Contact</span>
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="#feedback">
+                            <a href="#feedback" onclick="showSection('feedback')">
                                 <i class="fas fa-comments"></i>
                                 <span data-i18n="feedback">Feedback</span>
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="#collaboration">
+                            <a href="#collaboration" onclick="showSection('collaboration')">
                                 <i class="fas fa-handshake"></i>
                                 <span data-i18n="collaboration">Collaboration</span>
                             </a>
@@ -152,11 +152,11 @@
                 </div>
 
                 <div class="social-links">
-                    <a href="#" class="social-link" title="Google Scholar"><i class="fab fa-google-scholar"></i></a>
-                    <a href="#" class="social-link" title="GitHub"><i class="fab fa-github"></i></a>
-                    <a href="#" class="social-link" title="LinkedIn"><i class="fab fa-linkedin"></i></a>
-                    <a href="#" class="social-link" title="Twitter"><i class="fab fa-twitter"></i></a>
-                    <a href="#" class="social-link" title="ORCID"><i class="fab fa-orcid"></i></a>
+                    <a href="#" class="social-link"><i class="fab fa-google-scholar"></i></a>
+                    <a href="#" class="social-link"><i class="fab fa-github"></i></a>
+                    <a href="#" class="social-link"><i class="fab fa-linkedin"></i></a>
+                    <a href="#" class="social-link"><i class="fab fa-twitter"></i></a>
+                    <a href="#" class="social-link"><i class="fab fa-orcid"></i></a>
                 </div>
             </div>
         </nav>
@@ -218,51 +218,19 @@
     <!-- Modal Container -->
     <div id="modal-container"></div>
 
-    <!-- Utility Scripts -->
-    <script>
-        // 기본 유틸리티 함수들
-        function toggleTheme() {
-            const html = document.documentElement;
-            const currentTheme = html.getAttribute('data-theme');
-            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-            
-            html.setAttribute('data-theme', newTheme);
-            localStorage.setItem('theme', newTheme);
-            
-            const icon = document.getElementById('theme-icon');
-            if (icon) {
-                icon.className = newTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
-            }
-        }
-        
-        function toggleLanguage() {
-            // 언어 토글 로직 (추후 구현)
-            console.log('언어 토글');
-        }
-        
-        function toggleMobileMenu() {
-            const sidebar = document.querySelector('.sidebar');
-            if (sidebar) {
-                sidebar.classList.toggle('mobile-open');
-            }
-        }
-        
-        function showAdminPanel() {
-            console.log('관리자 패널 표시');
-            // 관리자 패널 로직은 DataManager에서 구현
-        }
-        
-        function showSettings() {
-            console.log('설정 표시');
-            // 설정 로직 추후 구현
-        }
-    </script>
+    <!-- Notification Toast -->
+    <div id="toast" class="toast">
+        <i class="fas fa-check-circle"></i>
+        <span id="toast-message"></span>
+    </div>
 
-    <!-- 모듈 스크립트들 - 순서 중요 -->
-    <script src="js/utils/firebase.js"></script>
-    <script src="js/ui/auth-ui.js"></script>
-    <script src="js/ui/app-manager.js"></script>
-    <script src="js/data/data-manager.js"></script>
-    <script src="js/ai/ai-manager.js"></script>
+    <!-- Scripts -->
+    <script src="firebase-config.js"></script>
+    <script src="auth.js"></script>
+    <script src="ai-assistant.js"></script>
+    <script src="publications.js"></script>
+    <script src="contact.js"></script>
+    <script src="analytics.js"></script>
+    <script src="script.js"></script>
 </body>
 </html> 
